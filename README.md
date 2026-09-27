@@ -18,7 +18,7 @@ Echte Pixel-Art: Welt aus 16×16-Kacheln, alle Figuren und Fallen als handgesetz
 | Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
 | Stacheln | Schaden am Boden |
 | Flammen | Feuersäule im Takt, drei Felder hoch |
-| Feuerstange | Kreisende Feuerkugeln, frei in der Luft |
+| Feuerrad | Kreisende Feuerkugeln, frei in der Luft |
 | Stampfer | Kracht herunter, sobald ein Held darunter ist |
 | Kanone | Schießt Kugeln nach links, zählt als Block |
 | Katapult | Schleudert Helden zurück |
