@@ -118,10 +118,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 'use strict';
 
 // ================= Konstanten =================
-const TILE = 48, NT = 64, WORLD_W = NT * TILE, H = 380, GY = 320;
-const BUILD_MIN = 3, BUILD_MAX = NT - 7;
-const CASTLE_L = (NT - 6) * TILE;
-const LEAK_X = CASTLE_L + 40;
+const TILE = 48, NT_MAX = 64, H = 380, GY = 320, BUILD_MIN = 3;
+// Die Strecke wächst mit der Runde: kurz am Anfang, lang später
+const roadTiles = w => Math.min(NT_MAX, 22 + (w - 1) * 2);
+let NT, WORLD_W, BUILD_MAX, CASTLE_L, LEAK_X;
+function applyLength(w) {
+  NT = roadTiles(w); WORLD_W = NT * TILE; BUILD_MAX = NT - 7;
+  CASTLE_L = (NT - 6) * TILE; LEAK_X = CASTLE_L + 40;
+}
 const G = 1600, JV = 520, AIRT = 2 * JV / G;
 const WALL_H = 104;
 const FLAME_P = 3.2, FLAME_ON = 1.2;
@@ -133,7 +137,7 @@ const TRAPS = {
              lv: [{ dps: 35 }, { dps: 60 }, { dps: 95 }] },
   pit:     { name: 'Grube', cost: 60, danger: true, col: '#000',
              desc: 'Wer reinfällt, ist tot. Aber: gefallene Helden füllen die Grube, bis man drüberlaufen kann. Upgrade = tiefer + getarnt.',
-             lv: [{ camo: 1, cap: 5 }, { camo: .6, cap: 8 }, { camo: .3, cap: 12 }] },
+             lv: [{ camo: 1, cap: 4 }, { camo: .78, cap: 6 }, { camo: .58, cap: 9 }] },
   wall:    { name: 'Barrikade', cost: 40, col: '#8a5a2b',
              desc: 'Blockiert den Weg. Helden müssen sie zerschlagen. Wird jede Runde repariert.',
              lv: [{ hp: 160 }, { hp: 340 }, { hp: 620 }] },
@@ -177,12 +181,12 @@ let lordLaugh = 0;
 
 const stat = tr => TRAPS[tr.type].lv[tr.lvl - 1];
 const tileAt = x => Math.floor(x / TILE);
-const trapAt = i => (i >= 0 && i < NT) ? S.grid[i] : null;
+const trapAt = i => (i >= 0 && i < NT_MAX) ? S.grid[i] : null;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 
 function newState() {
-  return { gold: 250, wave: 1, grid: new Array(NT).fill(null), kills: 0, leaks: 0, perfect: 0, streak: 0, best: 0 };
+  return { gold: 150, wave: 1, grid: new Array(NT_MAX).fill(null), kills: 0, leaks: 0, perfect: 0, streak: 0, best: 0 };
 }
 
 function save() {
@@ -197,8 +201,8 @@ function load() {
     if (!raw) return null;
     const d = JSON.parse(raw);
     const s = { ...newState(), ...d };
-    s.grid = new Array(NT).fill(null);
-    (d.grid || []).forEach((t, i) => { if (t && TRAPS[t.type] && i < NT) s.grid[i] = makeTrap(t.type, i, t.lvl, t.spent, false); });
+    s.grid = new Array(NT_MAX).fill(null);
+    (d.grid || []).forEach((t, i) => { if (t && TRAPS[t.type] && i < NT_MAX) s.grid[i] = makeTrap(t.type, i, t.lvl, t.spent, false); });
     return s;
   } catch (e) { return null; }
 }
@@ -214,17 +218,17 @@ function resetTrap(tr) {
 }
 
 // ================= Wellen =================
-function waveHpMul(w) { return 1 + (w - 1) * .18 + Math.max(0, w - 8) * .14 + Math.max(0, w - 15) * .25; }
+function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 6) * .2 + Math.max(0, w - 12) * .3; }
 // Helden lernen dazu: sie erkennen Fallen öfter und springen weiter
-const waveSkill = w => Math.min(.3, (w - 1) * .02);
-const waveRng = w => 1 + Math.min(.35, (w - 1) * .02);
-function waveCount(w) { return Math.min(14 + w * 4, 130); }
+const waveSkill = w => .15 + Math.min(.35, (w - 1) * .03);
+const waveRng = w => 1 + Math.min(.4, (w - 1) * .03);
+function waveCount(w) { return Math.min(34 + w * 4, 130); }
 function waveList(w) {
   const pool = [['squire', 10]];
   if (w >= 2) pool.push(['rogue', 3 + w * .5]);
   if (w >= 3) pool.push(['knight', 2 + w * .4]);
   if (w >= 4) pool.push(['cleric', 1.5 + w * .2]);
-  if (w >= 6) pool.push(['mage', 1 + w * .45]);
+  if (w >= 5) pool.push(['mage', 1 + w * .6]);
   const tot = pool.reduce((a, p) => a + p[1], 0);
   const list = [];
   for (let n = waveCount(w); n > 0; n--) {
@@ -272,11 +276,12 @@ function endWave() {
   phase = 'build';
   const perfect = W.leaks === 0;
   let bonus = 0;
-  if (perfect) { bonus = 20 + S.wave * 4; S.perfect++; S.streak++; } else S.streak = 0;
+  if (perfect) { bonus = 20 + S.wave * 4; S.perfect++; S.streak++; S.retry = 0; } else { S.streak = 0; S.retry = (S.retry || 0) + 1; }
   S.gold += bonus;
   S.best = Math.max(S.best, S.wave);
   const done = S.wave;
-  S.wave++;
+  // Nächste Runde nur, wenn keiner durchgekommen ist. Sonst dieselbe Runde nochmal.
+  if (perfect) { S.wave++; applyLength(S.wave); }
   S.grid.forEach(tr => tr && resetTrap(tr));
   arrows = [];
   save();
@@ -990,7 +995,7 @@ function updateUI() {
   $('bStart').classList.toggle('hide', !build);
   if (build) {
     const l = planned(S.wave);
-    $('bStart').innerHTML = `▶ Runde ${S.wave}<small>${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}</small>`;
+    $('bStart').innerHTML = `${S.retry ? '↻' : '▶'} Runde ${S.wave}<small>${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}</small>`;
     refreshPalette();
   } else {
     const left = heroes.length + spawnQ.length;
@@ -1115,7 +1120,7 @@ const HELP = `<ul>
   <li>Du bist der <b>Dunkle Lord</b>. Helden rennen vom Portal (links) zu deinem Schloss (rechts).</li>
   <li>Zwischen den Runden: unten eine Falle wählen, dann auf den Weg tippen. Falle antippen = Upgrade / Verkaufen.</li>
   <li>Wischen verschiebt die Kamera, die Leiste oben zeigt die ganze Strecke.</li>
-  <li>Jeder getötete Held bringt Gold. Keiner durchgekommen = <b>Bonus</b>.</li>
+  <li>Jeder getötete Held bringt Gold. Die nächste Runde gibt es erst, wenn <b>kein Held</b> durchkommt. Sonst wiederholst du die Runde und behältst dein Gold.</li>
   <li>Helden springen über Fallen, die sie erkennen. Schurken springen weit, Ritter kaum. Magier schweben über Bodenfallen. Klerikerinnen heilen.</li>
   <li>Tipp: Kombiniere! Barrikade hinter Stacheln, Katapult vor Flammen, breite Gruben, Frost vor Gruben (verlangsamte Helden springen zu kurz).</li>
 </ul>`;
@@ -1133,6 +1138,7 @@ function showStart() {
   $('mNew').onclick = () => { S = newState(); save(); begin(); };
 }
 function begin() {
+  applyLength(S.wave);
   phase = 'build'; heroes = []; spawnQ = []; arrows = []; parts = []; texts = [];
   selType = null; closePopup(); preview = null;
   camX = 0; clampCam();
@@ -1167,16 +1173,17 @@ function showMenu() {
 function showResult(w, perfect, bonus) {
   const next = heroMix(S.wave);
   const names = Object.entries(next).map(([t, n]) => `${n}× ${HT[t].name}`).join(', ');
-  const newTypes = { 2: 'rogue', 3: 'knight', 4: 'cleric', 6: 'mage' }[S.wave];
-  showCard(`<h2>Runde ${w} vorbei</h2>
+  const newTypes = perfect && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
+  showCard(`<h2>Runde ${w} ${perfect ? 'geschafft' : 'nicht geschafft'}</h2>
     <div class="big ${perfect ? 'good' : 'bad'}">${perfect ? 'Perfekt! Keiner ist durchgekommen.' : `${W.leaks} Held${W.leaks === 1 ? '' : 'en'} durchgekommen`}</div>
+    ${perfect ? (roadTiles(S.wave) > roadTiles(w) ? '<p>Die Strecke zu deinem Schloss wird länger.</p>' : '') : '<p>Erst wenn keiner mehr durchkommt, geht es weiter. Dein Gold behältst du: bau nach und versuch es nochmal.</p>'}
     <div class="res">
       <span>Getötet</span><b>${W.kills}</b>
       <span>Gold durch Kills</span><b class="gold">+${W.gold}</b>
       ${perfect ? `<span>Perfekt-Bonus</span><b class="gold">+${bonus}</b>` : ''}
       <span>Serie perfekter Runden</span><b>${S.streak}</b>
     </div>
-    <p><b>Nächste Runde:</b> ${names}</p>
+    <p><b>${perfect ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
     ${newTypes ? `<p class="gold">Neu: ${HT[newTypes].name} - ${{ rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen! Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' }[newTypes]}</p>` : ''}
     ${next.paladin ? '<p class="bad"><b>Achtung:</b> Ein Paladin kommt. Er klettert sogar aus Gruben.</p>' : ''}
     <div class="row"><button class="btn" id="mOk">Fallen bauen</button></div>`);
@@ -1197,6 +1204,7 @@ function frame(now) {
 
 window.addEventListener('resize', () => setTimeout(resize, 50));
 S = load() || newState();
+applyLength(S.wave);
 resize();
 ORDER.forEach((t, k) => drawIcon(palette.children[k].querySelector('canvas'), t));
 updateUI();
