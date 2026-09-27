@@ -14,7 +14,7 @@
 
 ## Dunkler Lord
 
-Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt dauerhaft erhalten, auch bei einem neuen Spiel.
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen auf den Boden unter der Tippstelle. Eine blinkende Markierung zeigt den Einschlag, trifft der Stein unterwegs einen Helden, schlägt er dort ein (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt dauerhaft erhalten, auch bei einem neuen Spiel.
 
 ## Spielen
 

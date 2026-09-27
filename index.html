@@ -651,28 +651,44 @@ function updArrows(dt) {
 }
 
 const lordPos = () => ({ x: CASTLE_L + 88, y: GY - 196 });
-function throwStone(wx, wy) {
+// Der Stein fliegt im Bogen zum Boden unter der Tippstelle (egal wie hoch getippt wurde)
+// und schlägt erst dort auf, außer er trifft unterwegs einen Helden.
+const STONE_G = 900;
+function throwStone(wx) {
   if (stoneT > 0) return;
-  const o = lordPos(), tx = clamp(wx, 0, WORLD_W), ty = clamp(wy, GY - 140, GY - 6);
-  stones.push({ x0: o.x, y0: o.y, tx, ty, x: o.x, y: o.y, t: 0, T: .35 + Math.abs(tx - o.x) / 1400, arc: 70 + Math.abs(tx - o.x) * .12 });
+  const o = lordPos(), tx = clamp(wx, 0, WORLD_W), ty = GY - 4;
+  const T = .35 + Math.abs(tx - o.x) / 1400;
+  const st = { x: o.x, y: o.y, vx: (tx - o.x) / T, vy: (ty - o.y - .5 * STONE_G * T * T) / T, t: 0 };
+  // Landepunkt vorausberechnen (für die Warnmarkierung am Boden)
+  let px = st.x, py = st.y, pvy = st.vy;
+  for (let k = 0; k < 400 && py < GY - 4; k++) { pvy += STONE_G * .02; px += st.vx * .02; py += pvy * .02; }
+  st.lx = px;
+  stones.push(st);
   stoneT = stoneCd(); lordThrow = .3;
+}
+function stoneImpact(st, x, y) {
+  st.done = true;
+  const R = stoneRad();
+  for (const h of heroes) if (!h.dead && h.st !== 'fall' && Math.hypot(h.x - x, h.y - 12 * h.def.s - y) <= R + 6) damage(h, stoneDmg(), 'stone');
+  for (let k = 0; k < 10; k++) parts.push({ x, y, vx: rnd(-110, 110), vy: rnd(-160, -30), life: rnd(.3, .6), max: .6, col: k % 2 ? '#a8a8b8' : '#6e6e82', sz: rnd(2, 4), g: 600 });
+  parts.push({ ring: true, rock: true, x, y, r: R, life: .3, max: .3 });
+  shake = Math.max(shake, .06);
 }
 function updStones(dt) {
   if (stoneT > 0) stoneT -= dt;
   if (lordThrow > 0) lordThrow -= dt;
   for (const st of stones) {
     st.t += dt;
-    const f = Math.min(1, st.t / st.T);
-    st.x = st.x0 + (st.tx - st.x0) * f;
-    st.y = st.y0 + (st.ty - st.y0) * f - Math.sin(f * Math.PI) * st.arc;
-    if (f >= 1) {
-      st.done = true;
-      const R = stoneRad();
-      for (const h of heroes) if (!h.dead && h.st !== 'fall' && Math.hypot(h.x - st.tx, h.y - 12 * h.def.s - st.ty) <= R + 6) damage(h, stoneDmg(), 'stone');
-      for (let k = 0; k < 10; k++) parts.push({ x: st.tx, y: st.ty, vx: rnd(-110, 110), vy: rnd(-160, -30), life: rnd(.3, .6), max: .6, col: k % 2 ? '#8d8193' : '#5d5266', sz: rnd(2, 4), g: 600 });
-      parts.push({ ring: true, rock: true, x: st.tx, y: st.ty, r: R, life: .3, max: .3 });
-      shake = Math.max(shake, .06);
+    st.vy += STONE_G * dt; st.x += st.vx * dt; st.y += st.vy * dt;
+    // Treffer an einem Helden unterwegs
+    const hit = heroes.find(h => !h.dead && h.st !== 'fall' && Math.abs(h.x - st.x) < 9 * h.def.s + 5 && st.y > h.y - 30 * h.def.s && st.y < h.y + 2);
+    if (hit) { stoneImpact(st, st.x, st.y); continue; }
+    if (st.y >= GY - 4) {
+      const tr = trapAt(tileAt(st.x));
+      if (tr && tr.type === 'pit' && pitOpen(tr)) { if (st.y > H) st.done = true; } // fällt in die Grube
+      else stoneImpact(st, st.x, GY - 4);
     }
+    if (st.x < -50 || st.x > WORLD_W + 50) st.done = true;
   }
   stones = stones.filter(s => !s.done);
 }
@@ -1152,11 +1168,18 @@ function draw() {
   // Pfeile
   c.strokeStyle = '#e8d9b0'; c.lineWidth = 1.6;
   for (const a of arrows) { const l = Math.hypot(a.vx, a.vy) || 1; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(a.x - a.vx / l * 9, a.y - a.vy / l * 9); c.stroke(); }
-  // Steine des Lords
+  // Steine des Lords: Warnmarkierung am Landepunkt, dann der Stein selbst
+  for (const st of stones) {
+    const R = stoneRad(), blink = Math.floor(time * 8) % 2;
+    c.fillStyle = blink ? '#e8303a' : '#ffd02a';
+    c.fillRect(st.lx - R, GY - 2, R * 2, 4);
+    c.fillRect(st.lx - 2, GY - 14, 4, 8); c.fillRect(st.lx - 2, GY - 24, 4, 6);
+  }
   for (const st of stones) {
     c.save(); c.translate(st.x, st.y); c.rotate(st.t * 12);
-    c.fillStyle = '#6d6275'; c.beginPath(); c.moveTo(-6, -3); c.lineTo(-2, -7); c.lineTo(5, -5); c.lineTo(7, 2); c.lineTo(1, 7); c.lineTo(-6, 4); c.closePath(); c.fill();
-    c.fillStyle = '#8d8193'; c.fillRect(-3, -4, 4, 3);
+    c.fillStyle = '#1a1020'; c.beginPath(); c.arc(0, 0, 8, 0, 7); c.fill();
+    c.fillStyle = '#6e6e82'; c.beginPath(); c.moveTo(-6, -3); c.lineTo(-2, -7); c.lineTo(5, -5); c.lineTo(7, 2); c.lineTo(1, 7); c.lineTo(-6, 4); c.closePath(); c.fill();
+    c.fillStyle = '#a8a8b8'; c.fillRect(-3, -4, 4, 3);
     c.restore();
   }
   // Partikel
@@ -1325,7 +1348,7 @@ function closePopup() { selTile = -1; $('popup').classList.add('hide'); }
 function tapWorld(sx, sy) {
   if (sy < MM.y + MM.h + 10) { camX = (sx - MM.x) / (cssW - 16) * WORLD_W - viewW / 2; clampCam(); return; }
   const wx = camX + sx / scale;
-  if (phase === 'wave') { throwStone(wx, sy / scale); return; }
+  if (phase === 'wave') { throwStone(wx); return; }
   const i = tileAt(wx);
   if (i < 0 || i >= NT) return;
   const tr = S.grid[i];
