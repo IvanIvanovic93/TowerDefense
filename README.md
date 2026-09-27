@@ -10,6 +10,11 @@
 - **Boss:** Jede 5. Runde kommen Paladine. Danach wird das Feld geräumt, und du baust mit einem großen Budget neu auf (Summe aller bisherigen Rundenbudgets).
 - **Strecke:** Am Anfang kurz (passt auf einen Bildschirm), mit jeder geschafften Runde 2 Felder länger.
 - **Barrikaden:** Helden bleiben im Feld davor stehen, Fallen dort treffen sie also voll.
+- **Stampfer:** Solange der Block unten ist, kommt keiner vorbei.
+
+## Dunkler Lord
+
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt dauerhaft erhalten, auch bei einem neuen Spiel.
 
 ## Spielen
 

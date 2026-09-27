@@ -26,6 +26,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stat.g{color:var(--gold)}
 .stat small{font-weight:600;color:var(--muted);font-size:11px}
 .sp{flex:1}
+.lordb{width:auto!important;padding:0 7px;display:flex;align-items:center;gap:3px;position:relative}
+.lordb.pts::after{content:'';position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--panel)}
 .ib{width:34px;height:30px;border:none;border-radius:8px;background:var(--panel2);font-weight:800;font-size:14px;border:1px solid var(--line)}
 #stage{flex:1;position:relative;min-height:0;overflow:hidden}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -68,6 +70,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .card ul{color:var(--muted);font-size:13px;line-height:1.45;margin:6px 0 6px 18px}
 .card .row{display:flex;gap:8px;margin-top:12px}
 .card .row .btn{flex:1;height:46px}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.lrow>div{flex:1}
+.lrow .muted,.muted{color:var(--muted);font-size:13px}
+.lup{width:46px;height:40px;font-size:22px;flex:none}
+.lup:disabled{opacity:.35}
+.bar.xp{margin:6px 0}
+.bar.xp i{background:linear-gradient(90deg,#6b2fb0,#c38bff)}
 .card details{margin-top:10px;color:var(--muted);font-size:14px}
 .card summary{cursor:pointer;font-weight:700;color:var(--text);padding:4px 0}
 .res{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;margin:8px 0}
@@ -90,6 +99,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="stat">💀 <span id="kills">0</span></div>
     <div class="stat">🏃 <span id="leaks">0</span> <small>durch</small></div>
     <div class="sp"></div>
+    <button class="ib lordb" id="bLord">😈<span id="lordLv">1</span></button>
     <button class="ib" id="bSpeed">1×</button>
     <button class="ib" id="bPause">⏸</button>
     <button class="ib" id="bMenu">☰</button>
@@ -181,6 +191,28 @@ let selType = null, selTile = -1;
 let camX = 0, time = 0, shake = 0;
 let lordLaugh = 0;
 
+// ================= Dunkler Lord (bleibt dauerhaft, auch bei neuem Spiel) =================
+const LORD_KEY = 'fallenfuerst_lord_v1', LORD_MAX = 10;
+const LORD_SKILLS = {
+  dmg: { name: 'Wurfkraft', txt: l => `${stoneDmg(l)} Schaden` },
+  cd:  { name: 'Nachladen', txt: l => `alle ${stoneCd(l).toFixed(2)} s` },
+  rad: { name: 'Einschlag', txt: l => `${stoneRad(l)} Radius` },
+};
+const stoneDmg = (l = lord.pts.dmg) => 18 + l * 10;
+const stoneCd = (l = lord.pts.cd) => 1.5 - l * .11;
+const stoneRad = (l = lord.pts.rad) => 22 + l * 5;
+const lordXpFor = lv => Math.round(25 * Math.pow(lv - 1, 1.6)); // XP, ab der Stufe lv erreicht ist
+function lordLevel() { let l = 1; while (lordXpFor(l + 1) <= lord.xp) l++; return l; }
+const lordSpent = () => lord.pts.dmg + lord.pts.cd + lord.pts.rad;
+const lordFree = () => Math.max(0, lordLevel() - 1 - lordSpent());
+function loadLord() {
+  try { const d = JSON.parse(localStorage.getItem(LORD_KEY)); if (d && d.pts) return { xp: d.xp || 0, pts: { dmg: 0, cd: 0, rad: 0, ...d.pts } }; } catch (e) {}
+  return { xp: 0, pts: { dmg: 0, cd: 0, rad: 0 } };
+}
+function saveLord() { try { localStorage.setItem(LORD_KEY, JSON.stringify(lord)); } catch (e) {} }
+let lord = loadLord();
+let stones = [], stoneT = 0, lordThrow = 0;
+
 const stat = tr => TRAPS[tr.type].lv[tr.lvl - 1];
 const tileAt = x => Math.floor(x / TILE);
 const trapAt = i => (i >= 0 && i < NT_MAX) ? S.grid[i] : null;
@@ -260,6 +292,8 @@ function startWave() {
   });
   waveT = 0; waveTotal = list.length;
   W = { kills: 0, leaks: 0, gold: 0 };
+  stones = []; stoneT = 0;
+  if (lord.xp < 40) setTimeout(() => toast('Tippe auf die Strecke: der Lord wirft Steine!', 2600), 400);
   S.grid.forEach(tr => { if (tr) { tr.fresh = false; resetTrap(tr); } });
   heroes = []; arrows = [];
   updateUI();
@@ -303,8 +337,8 @@ function endWave() {
     applyLength(S.wave);
   } else S.retry = (S.retry || 0) + 1;
   S.grid.forEach(tr => tr && resetTrap(tr));
-  arrows = [];
-  save();
+  arrows = []; stones = [];
+  save(); saveLord();
   showResult(done, stars);
   updateUI();
 }
@@ -313,12 +347,29 @@ function endWave() {
 const pitOpen = tr => tr.type === 'pit' && tr.fill < stat(tr).cap;
 function isDanger(tr, h) { return !!tr && !!TRAPS[tr.type].danger && !h.def.float && (tr.type !== 'pit' || pitOpen(tr)); }
 
+// Oberkante des Stampfer-Blocks (26 hoch + Zacken)
+function crushY(tr) {
+  const P = stat(tr).per, ph = tr.t % P, top = GY - 165, bot = GY - 30;
+  if (ph < .35) return bot;
+  if (ph < 1) return bot + (top - bot) * ((ph - .35) / .65);
+  if (ph < P - .22) return top;
+  const f = (ph - (P - .22)) / .22; return top + (bot - top) * f * f;
+}
+
 function moveX(h, dx) {
   let nx = h.x + dx;
+  h.halted = false;
   if (h.y > GY - WALL_H) {
     const a = Math.min(h.x, nx) - 8, b = Math.max(h.x, nx) + 8;
     for (let k = tileAt(a); k <= tileAt(b); k++) {
       const tr = trapAt(k);
+      // Ein unten stehender Stampfer ist eine Wand: keiner läuft durch
+      if (tr && tr.type === 'crusher' && crushY(tr) + 30 > h.y - 26 * h.def.s) {
+        const L = k * TILE + 4, R = k * TILE + 44;
+        if (dx > 0 && h.x + 7 <= L + .01 && nx + 7 > L) { nx = L - 7; h.halted = true; if (h.st === 'air') h.vx = 0; }
+        else if (dx < 0 && h.x - 7 >= R - .01 && nx - 7 < R) { nx = R + 7; h.vx = 0; }
+        continue;
+      }
       if (!tr || tr.type !== 'wall' || tr.hp <= 0) continue;
       // Helden bleiben im Feld VOR der Barrikade stehen, damit Fallen dort sie treffen
       const L = k * TILE, R = k * TILE + 34;
@@ -418,6 +469,9 @@ function kill(h, src) {
   // Wiederholte Runden geben nur halbes Gold
   const g = Math.max(1, Math.round(h.def.gold * (1 + (S.wave - 1) * .025) * (S.retry ? .5 : 1)));
   S.gold += g; S.kills++; W.kills++; W.gold += g;
+  const lvBefore = lordLevel();
+  lord.xp += h.def.boss ? 10 : 1;
+  if (lordLevel() > lvBefore) { saveLord(); texts.push({ x: CASTLE_L + 88, y: GY - 220, txt: 'Lord Stufe ' + lordLevel() + '!', col: '#c38bff', life: 2, max: 2 }); }
   lordLaugh = 1.2;
   const y = src === 'pit' ? GY - 6 : h.y - 14;
   for (let k = 0; k < 10; k++) parts.push({ x: h.x, y, vx: rnd(-60, 60), vy: rnd(-120, -20), life: rnd(.4, .8), max: .8, col: k < 3 ? '#ffd24a' : '#d9c8e8', sz: rnd(2, 4), g: 200 });
@@ -486,7 +540,7 @@ function updHero(h, dt) {
   h.waiting = shouldWait(h, sp);
   h.waitT = h.waiting ? h.waitT + dt : 0;
   if (!h.waiting && !d.float) { planJump(h); if (h.st === 'air') return; }
-  if (!h.waiting) { moveX(h, sp * dt); h.anim += sp * dt * (h.blocked ? 0 : 1); }
+  if (!h.waiting) { moveX(h, sp * dt); h.anim += sp * dt * (h.blocked || h.halted ? 0 : 1); }
   if (h.blocked) {
     const w = h.blocked;
     w.hp -= d.dps * hpMul * dt; w.hit = .12; h.anim += dt * 30;
@@ -554,6 +608,33 @@ function updArrows(dt) {
   arrows = arrows.filter(a => a.life > 0);
 }
 
+const lordPos = () => ({ x: CASTLE_L + 88, y: GY - 196 });
+function throwStone(wx, wy) {
+  if (stoneT > 0) return;
+  const o = lordPos(), tx = clamp(wx, 0, WORLD_W), ty = clamp(wy, GY - 140, GY - 6);
+  stones.push({ x0: o.x, y0: o.y, tx, ty, x: o.x, y: o.y, t: 0, T: .35 + Math.abs(tx - o.x) / 1400, arc: 70 + Math.abs(tx - o.x) * .12 });
+  stoneT = stoneCd(); lordThrow = .3;
+}
+function updStones(dt) {
+  if (stoneT > 0) stoneT -= dt;
+  if (lordThrow > 0) lordThrow -= dt;
+  for (const st of stones) {
+    st.t += dt;
+    const f = Math.min(1, st.t / st.T);
+    st.x = st.x0 + (st.tx - st.x0) * f;
+    st.y = st.y0 + (st.ty - st.y0) * f - Math.sin(f * Math.PI) * st.arc;
+    if (f >= 1) {
+      st.done = true;
+      const R = stoneRad();
+      for (const h of heroes) if (!h.dead && h.st !== 'fall' && Math.hypot(h.x - st.tx, h.y - 12 * h.def.s - st.ty) <= R + 6) damage(h, stoneDmg(), 'stone');
+      for (let k = 0; k < 10; k++) parts.push({ x: st.tx, y: st.ty, vx: rnd(-110, 110), vy: rnd(-160, -30), life: rnd(.3, .6), max: .6, col: k % 2 ? '#8d8193' : '#5d5266', sz: rnd(2, 4), g: 600 });
+      parts.push({ ring: true, rock: true, x: st.tx, y: st.ty, r: R, life: .3, max: .3 });
+      shake = Math.max(shake, .06);
+    }
+  }
+  stones = stones.filter(s => !s.done);
+}
+
 function updFx(dt) {
   for (const p of parts) {
     p.life -= dt;
@@ -582,6 +663,7 @@ function update(dt) {
     for (const h of heroes) if (!h.dead) updHero(h, dt);
     heroes = heroes.filter(h => !h.dead);
     updArrows(dt);
+    updStones(dt);
     if (!spawnQ.length && !heroes.length) endWave();
   }
   updFx(dt);
@@ -695,6 +777,10 @@ function drawCastle() {
   c.beginPath(); c.moveTo(lx - 6, ly - 32 - bounce); c.lineTo(lx - 10, ly - 42 - bounce); c.lineTo(lx - 3, ly - 34 - bounce); c.fill();
   c.beginPath(); c.moveTo(lx + 6, ly - 32 - bounce); c.lineTo(lx + 10, ly - 42 - bounce); c.lineTo(lx + 3, ly - 34 - bounce); c.fill();
   c.fillStyle = '#ff3b3b'; c.fillRect(lx - 4, ly - 30 - bounce, 2, 2); c.fillRect(lx + 2, ly - 30 - bounce, 2, 2);
+  c.strokeStyle = '#0a0510'; c.lineWidth = 3; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(lx + 6, ly - 18 - bounce);
+  if (lordThrow > 0) c.lineTo(lx + 2, ly - 44 - bounce); else c.lineTo(lx + 13, ly - 8 - bounce);
+  c.stroke();
   if (lordLaugh > 0) { c.fillStyle = '#ffd24a'; c.font = 'bold 12px system-ui'; c.textAlign = 'center'; c.fillText('Muhaha!', lx, ly - 50); }
 }
 
@@ -798,10 +884,7 @@ function drawTrap(tr, x, layer) {
       }
     } break;
     case 'crusher': {
-      const P = st.per, ph = tr.t % P, top = GY - 165, bot = GY - 30;
-      let by;
-      if (ph < .35) by = bot; else if (ph < 1) by = bot + (top - bot) * ((ph - .35) / .65);
-      else if (ph < P - .22) by = top; else { const f = (ph - (P - .22)) / .22; by = top + (bot - top) * f * f; }
+      const by = crushY(tr);
       if (!layer) {
         c.fillStyle = '#3a3440'; c.fillRect(x + 1, GY - 180, 6, 180); c.fillRect(x + 41, GY - 180, 6, 180);
         c.fillStyle = '#4c4552'; c.fillRect(x - 2, GY - 186, 52, 10);
@@ -838,7 +921,7 @@ function drawHero(h) {
   if (h.st === 'air' && h.knock) { c.translate(0, -14 * s); c.rotate(-h.spin); c.translate(0, 14 * s); }
   if (h.st === 'fall') c.rotate(Math.sin(h.fallT * 25) * .4);
   c.scale(s, s);
-  const moving = h.st === 'run' && !h.waiting && !h.blocked;
+  const moving = h.st === 'run' && !h.waiting && !h.blocked && !h.halted;
   const lg = moving ? Math.sin(h.anim * .25) * 5 : h.st === 'air' ? 3 : 0;
   const body = h.flash > 0 ? '#fff' : d.col;
   if (d.float) {
@@ -931,10 +1014,18 @@ function draw() {
   // Pfeile
   c.strokeStyle = '#e8d9b0'; c.lineWidth = 1.6;
   for (const a of arrows) { const l = Math.hypot(a.vx, a.vy) || 1; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(a.x - a.vx / l * 9, a.y - a.vy / l * 9); c.stroke(); }
+  // Steine des Lords
+  for (const st of stones) {
+    c.save(); c.translate(st.x, st.y); c.rotate(st.t * 12);
+    c.fillStyle = '#6d6275'; c.beginPath(); c.moveTo(-6, -3); c.lineTo(-2, -7); c.lineTo(5, -5); c.lineTo(7, 2); c.lineTo(1, 7); c.lineTo(-6, 4); c.closePath(); c.fill();
+    c.fillStyle = '#8d8193'; c.fillRect(-3, -4, 4, 3);
+    c.restore();
+  }
   // Partikel
   for (const p of parts) {
     const al = clamp(p.life / p.max, 0, 1);
     if (p.ghost) { c.fillStyle = `rgba(230,220,255,${al * .7})`; c.beginPath(); c.arc(p.x, p.y - 8, 5, Math.PI, 0); c.lineTo(p.x + 5, p.y); c.lineTo(p.x - 5, p.y); c.fill(); continue; }
+    if (p.ring && p.rock) { c.strokeStyle = `rgba(200,190,210,${al})`; c.lineWidth = 2; c.beginPath(); c.ellipse(p.x, p.y, p.r, p.r * .5, 0, 0, 7); c.stroke(); continue; }
     if (p.ring) { c.strokeStyle = `rgba(150,255,150,${al})`; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y, 100 * (1 - al) + 10, 0, 7); c.stroke(); continue; }
     c.globalAlpha = al; c.fillStyle = p.col; c.fillRect(p.x, p.y, p.sz, p.sz); c.globalAlpha = 1;
   }
@@ -955,6 +1046,12 @@ function drawMinimap() {
   for (const tr of S.grid) if (tr) { c.fillStyle = TRAPS[tr.type].col; c.fillRect(MM.x + tr.i * TILE * f, MM.y + MM.h - 7, Math.max(2, TILE * f - 1), 6); }
   for (const h of heroes) { c.fillStyle = h.def.boss ? '#ffd24a' : '#bfe3ff'; c.fillRect(MM.x + h.x * f - 1, MM.y + 2, h.def.boss ? 4 : 2, h.def.boss ? 5 : 4); }
   c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.strokeRect(MM.x + camX * f, MM.y - 1, viewW * f, MM.h + 2);
+  if (phase === 'wave') { // Nachlade-Anzeige für den Steinwurf
+    const cx = cssW - 28, cy = cssH - 28, r = stoneT > 0 ? 1 - stoneT / stoneCd() : 1;
+    c.fillStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(cx, cy, 20, 0, 7); c.fill();
+    c.strokeStyle = r >= 1 ? '#c38bff' : '#6d5a80'; c.lineWidth = 4; c.beginPath(); c.arc(cx, cy, 17, -Math.PI / 2, -Math.PI / 2 + r * Math.PI * 2); c.stroke();
+    c.fillStyle = r >= 1 ? '#bdb2c6' : '#6d6275'; c.beginPath(); c.moveTo(cx - 7, cy - 2); c.lineTo(cx - 2, cy - 8); c.lineTo(cx + 6, cy - 5); c.lineTo(cx + 8, cy + 3); c.lineTo(cx + 1, cy + 8); c.lineTo(cx - 7, cy + 5); c.fill();
+  }
 }
 
 // Icon-Vorschau für Palette
@@ -1025,6 +1122,8 @@ function updateUI() {
     $('wiText').textContent = `Runde ${S.wave}: noch ${left} von ${waveTotal} Helden · ${W.leaks ? W.leaks + ' durchgekommen' : 'keiner durch'}`;
     $('wiBar').style.width = ((waveTotal - left) / waveTotal * 100) + '%';
   }
+  $('lordLv').textContent = lordLevel();
+  $('bLord').classList.toggle('pts', lordFree() > 0);
   $('bSpeed').textContent = speed + '×';
   $('bPause').textContent = paused ? '▶' : '⏸';
 }
@@ -1083,6 +1182,7 @@ function closePopup() { selTile = -1; $('popup').classList.add('hide'); }
 function tapWorld(sx, sy) {
   if (sy < MM.y + MM.h + 10) { camX = (sx - MM.x) / (cssW - 16) * WORLD_W - viewW / 2; clampCam(); return; }
   const wx = camX + sx / scale;
+  if (phase === 'wave') { throwStone(wx, sy / scale); return; }
   const i = tileAt(wx);
   if (i < 0 || i >= NT) return;
   const tr = S.grid[i];
@@ -1134,6 +1234,7 @@ $('bStart').onclick = () => startWave();
 $('bSpeed').onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 3 : 1; updateUI(); };
 $('bPause').onclick = () => { paused = !paused; updateUI(); };
 $('bMenu').onclick = () => showMenu();
+$('bLord').onclick = () => showLord();
 
 // ================= Menüs =================
 function showCard(html) { $('card').innerHTML = html; $('overlay').classList.remove('hide'); menuOpen = true; }
@@ -1143,6 +1244,7 @@ const HELP = `<ul>
   <li>Du bist der <b>Dunkle Lord</b>. Helden rennen vom Portal (links) zu deinem Schloss (rechts).</li>
   <li>Zwischen den Runden: unten eine Falle wählen, dann auf den Weg tippen. Falle antippen = Upgrade / Verkaufen.</li>
   <li>Wischen verschiebt die Kamera, die Leiste oben zeigt die ganze Strecke.</li>
+  <li>Während einer Runde: tippe auf die Strecke, dann wirft der Lord einen Stein. Über 😈 levelst du ihn auf, sein Fortschritt bleibt dauerhaft.</li>
   <li>Bestanden ist eine Runde, wenn <b>unter 10 %</b> der Helden durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.</li>
   <li>Jede Runde gibt ein festes Budget. Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.</li>
   <li>Jede 5. Runde kommt ein Paladin als Boss. Danach wird das Feld geräumt und du startest mit großem Budget neu.</li>
@@ -1179,6 +1281,26 @@ function tryFullscreen() {
       el.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
     }
   } catch (e) {}
+}
+
+function showLord(resume) {
+  const wasPaused = resume === undefined ? paused : resume; paused = true;
+  const lv = lordLevel(), cur = lordXpFor(lv), nxt = lordXpFor(lv + 1), free = lordFree();
+  const rows = Object.entries(LORD_SKILLS).map(([k, sk]) => {
+    const l = lord.pts[k], max = l >= LORD_MAX;
+    return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` → <span class="gold">${sk.txt(l + 1)}</span>`}</span></div>
+      <button class="btn lup" data-k="${k}" ${!free || max ? 'disabled' : ''}>+</button></div>`;
+  }).join('');
+  showCard(`<h2>Dunkler Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:15px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>
+    <div class="bar xp"><i style="width:${Math.min(100, (lord.xp - cur) / (nxt - cur) * 100)}%"></i></div>
+    <p class="muted">${lord.xp - cur} / ${nxt - cur} Erfahrung bis Stufe ${lv + 1} (1 pro Held, 10 pro Paladin). In der Runde auf die Strecke tippen = Steinwurf. Der Lord behält alles, auch bei einem neuen Spiel.</p>
+    ${rows}
+    <div class="row"><button class="btn" id="mBack">Zurück</button></div>`);
+  document.querySelectorAll('.lup').forEach(b => b.onclick = () => {
+    if (lordFree() <= 0 || lord.pts[b.dataset.k] >= LORD_MAX) return;
+    lord.pts[b.dataset.k]++; saveLord(); showLord(wasPaused); updateUI();
+  });
+  $('mBack').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
 }
 
 function showMenu() {
@@ -1218,6 +1340,7 @@ function showResult(w, stars) {
     <p><b>${passed ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
     ${newTypes ? `<p class="gold">Neu: ${HT[newTypes].name} - ${{ rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen! Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' }[newTypes]}</p>` : ''}
     ${next.paladin ? `<p class="bad"><b>Bossrunde:</b> ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Gruben. Danach wird das Feld geräumt.</p>` : ''}
+    ${lordFree() ? `<p class="gold"><b>Dunkler Lord Stufe ${lordLevel()}:</b> ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei (😈 oben).</p>` : ''}
     <div class="row"><button class="btn" id="mOk">Fallen bauen</button></div>`);
   $('mOk').onclick = () => { hideCard(); updateUI(); };
 }
