@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.5', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-27.6', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -466,7 +466,8 @@ function advance(done) {
 }
 function endWave() {
   phase = 'build';
-  const done = S.wave, stars = starsFor(W.leaks, waveTotal);
+  // In der Bossrunde muss jeder Paladin fallen, sonst ist die Runde nicht bestanden
+  const done = S.wave, stars = W.bossLeaks ? 0 : starsFor(W.leaks, waveTotal);
   if (stars > 0) { S.stars[done] = Math.max(S.stars[done] || 0, stars); S.best = Math.max(S.best, done); }
   if (stars > 0 && isBoss(done) && done > lord.lastBoss) { lord.earned++; lord.lastBoss = done; }
   // Perfekt: direkt weiter. Bestanden, aber nicht perfekt: der Spieler entscheidet im Ergebnisfenster.
@@ -520,11 +521,22 @@ function kill(h, src) {
 }
 function leak(h) {
   h.dead = true; S.leaks++; W.leaks++;
+  if (h.def.boss) W.bossLeaks = (W.bossLeaks || 0) + 1;
   texts.push({ x: GOAL_X, y: GROUND * TS - 40, txt: 'Durch!', col: '#e03a3a', life: 1.1, max: 1.1 });
   shake = Math.max(shake, .15);
 }
 
 // Nächster Platz rechts, auf dem man stehen kann (für Paladin und festgefahrene Helden)
+function teleport(h, s) {
+  tpFx(h.x, h.y - h.h / 2, h.h);
+  h.x = s.x; h.y = s.y; h.vy = 0; h.vx = 0; h.plans = {}; h.tpIn = .4; teleports++;
+  tpFx(h.x, h.y - h.h / 2, h.h);
+  if (!seen.teleport) { markSeen('teleport'); texts.push({ x: h.x, y: h.y - h.h - 8, txt: 'teleportiert', col: '#c9b4ff', life: 1.4, max: 1.4 }); }
+}
+function tpFx(x, y, hh) {
+  parts.push({ tp: true, x, y, hh, life: .5, max: .5 });
+  for (let k = 0; k < 7; k++) parts.push({ x: x + rnd(-4, 4), y: y + rnd(-hh / 2, hh / 2), vx: rnd(-8, 8), vy: rnd(-40, -15), life: rnd(.3, .6), max: .6, col: '#c9b4ff', g: 0 });
+}
 function standSpotRight(c0, h) {
   for (let c = c0 + 1; c < NC; c++) for (let r = 1; r < ROWS; r++) {
     if (isSolid(c, r) && !isSolid(c, r - 1) && !isSolid(c, r - 2)) return { x: c * TS + TS / 2, y: r * TS };
@@ -628,6 +640,21 @@ function shouldWait(h) {
 
 function attackWall(h, dt) {
   const fr = feetRow(h), c = Math.floor((h.x + h.w / 2 + 2) / TS);
+  if (h.def.boss) {
+    // Der Paladin schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg
+    const hits = [];
+    for (let r = fr; r >= fr - 2; r--) { const t = thingAt(c, r); if (t && (t.type === 'block' || t.type === 'cannon') && t.hp > 0) hits.push(t); }
+    if (!hits.length) return false;
+    h.attacking = true; h.slamCd = (h.slamCd ?? .3) - dt;
+    if (h.slamCd <= 0) {
+      h.slamCd = .8; h.slamT = .35;
+      const dmg = h.def.dps * hpMul * 1.2;
+      for (const t of hits) { t.hp -= dmg; t.anim = .2; spark(c * TS + 3, t.r * TS + 8, '#e8c98a', 6); if (t.hp <= 0) breakBlock(t); }
+      parts.push({ ring: true, x: c * TS, y: (fr - 1) * TS + 8, life: .3, max: .3 });
+      shake = Math.max(shake, .18);
+    }
+    return true;
+  }
   for (let r = fr; r >= fr - Math.ceil(h.h / TS) + 1; r--) {
     const t = thingAt(c, r);
     if (t && (t.type === 'block' || t.type === 'cannon') && t.hp > 0) {
@@ -676,6 +703,8 @@ function updHero(h, dt, dyn) {
     }
   }
   h.attacking = false; h.waiting = false;
+  if (h.slamT > 0) h.slamT -= dt;
+  if (h.tpIn > 0) h.tpIn -= dt;
 
   if (d.float) {
     // Magier schweben knapp über dem höchsten Grund vor sich
@@ -700,7 +729,8 @@ function updHero(h, dt, dyn) {
         const fr = feetRow(h), c = h.hitWall.c ?? Math.floor((h.x + h.w / 2 + 2) / TS);
         let hg = 0; while (hg < 5 && isSolid(c, fr - hg)) hg++;
         const apex = h.jv * h.jv / (2 * G);
-        if (!h.hitWall.dyn && apex >= hg * TS + 2 && h.wallTries < 2) { h.wallTries++; h.vy = -h.jv; h.vx = h.spd * 1.3; h.onGround = false; }
+        if (h.def.boss && !h.hitWall.dyn && attackWall(h, dt)) { /* der Paladin springt nicht, er schlägt sich durch */ }
+        else if (!h.hitWall.dyn && apex >= hg * TS + 2 && h.wallTries < 2) { h.wallTries++; h.vy = -h.jv; h.vx = h.spd * 1.3; h.onGround = false; }
         else attackWall(h, dt);
       }
       if (!h.attacking && h.vx) h.anim += h.vx * dt;
@@ -719,11 +749,10 @@ function updHero(h, dt, dyn) {
     h.stuckT = (moved < 3 && !h.waiting && !h.attacking) ? h.stuckT + h.sampleT : 0;
     h.sampleT = 0; h.sampleX = h.x; h.sampleY = h.y;
   }
-  h.noProg = h.x > (h.progX ?? -1) + 8 ? (h.progX = h.x, 0) : (h.noProg || 0) + dt;
-  if (h.noProg > 20) { const sp = standSpotRight(Math.floor(h.x / TS) + 1, h); h.x = sp.x; h.y = sp.y; h.vy = 0; h.noProg = 0; h.progX = h.x; h.plans = {}; }
-  if (h.stuckT >= 6) {
-    const s = standSpotRight(Math.floor(h.x / TS), h); h.x = s.x; h.y = s.y; h.vy = 0; h.stuckT = 0; h.plans = {}; teleports++;
-  }
+  // Kein Vorankommen (Kämpfen und Warten zählen nicht): nach 5 s teleportiert sich der Held weiter
+  h.noProg = h.x > (h.progX ?? -1) + 8 ? (h.progX = h.x, 0) : (h.attacking || h.waiting) ? (h.noProg || 0) : (h.noProg || 0) + dt;
+  if (h.noProg > 5) { teleport(h, standSpotRight(Math.floor(h.x / TS) + 1, h)); h.noProg = 0; h.progX = h.x; }
+  if (h.stuckT >= 5) { teleport(h, standSpotRight(Math.floor(h.x / TS), h)); h.stuckT = 0; }
 
   if (h.y > ROWS * TS + 24) { pitDeath(h); return; }
   if (h.x >= GOAL_X) leak(h);
@@ -904,7 +933,7 @@ function updStones(dt) {
 // ================= Effekte & Update =================
 function spark(x, y, col, n) { for (let k = 0; k < n; k++) parts.push({ x, y, vx: rnd(-30, 30), vy: rnd(-60, -10), life: rnd(.2, .45), max: .45, col, g: 400 }); }
 function updFx(dt) {
-  for (const p of parts) { p.life -= dt; if (p.ring) continue; if (p.ghost) { p.y += p.vy * dt; continue; } p.vy += (p.g || 0) * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+  for (const p of parts) { p.life -= dt; if (p.ring || p.tp) continue; if (p.ghost) { p.y += p.vy * dt; continue; } p.vy += (p.g || 0) * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
   parts = parts.filter(p => p.life > 0);
   if (parts.length > 500) parts.splice(0, parts.length - 500);
   for (const t of texts) { t.life -= dt; t.y -= 16 * dt; }
@@ -1241,6 +1270,7 @@ function drawHero(h) {
   const moving = (h.onGround || d.float) && !h.attacking && !h.waiting && (h.vx > 0 || d.float);
   const ph = Math.sin(h.anim * .35), bob = moving ? Math.abs(ph) * .8 : 0;
   c.save(); c.translate(h.x, h.y + (d.float ? Math.sin(time * 3 + h.anim) * 1.2 : 0)); c.scale(s, s);
+  if (h.tpIn > 0) { c.globalAlpha = 1 - h.tpIn / .4; c.scale(1 - h.tpIn, 1 + h.tpIn * .6); }
   if (h.kb > 0) c.rotate(-.25);
   if (d.boss) glow(0, -9, 16, 'rgba(232,201,138,.35)');
   if (d.float) glow(0, 1, 6, 'rgba(184,154,255,.5)');
@@ -1277,6 +1307,12 @@ function drawHero(h) {
   c.strokeStyle = '#d6e0e6'; c.lineWidth = .9; c.lineCap = 'round';
   const sw = h.attacking ? Math.sin(time * 20) * 3 : 0;
   if (h.type === 'cleric' || h.type === 'mage') { c.strokeStyle = '#6a5a44'; c.beginPath(); c.moveTo(4.5, -1); c.lineTo(5.2, -12); c.stroke(); glow(5.2, -12.5, 2.5, h.type === 'mage' ? '#b89aff' : '#ffe6a8'); }
+  else if (d.boss && h.slamT > 0) {
+    // Hieb von oben nach vorne unten, mit Leuchtspur
+    const p = 1 - h.slamT / .35, a0 = -2.3, a = a0 + (2.9) * Math.min(1, p * 1.6), L2 = 11;
+    c.strokeStyle = `rgba(232,201,138,${.55 * (1 - p)})`; c.lineWidth = 2.2; c.beginPath(); c.arc(2.5, -8 - bob, L2, a0, a); c.stroke();
+    c.strokeStyle = '#eef3f6'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(2.5, -8 - bob); c.lineTo(2.5 + Math.cos(a) * L2, -8 - bob + Math.sin(a) * L2); c.stroke();
+  }
   else { c.beginPath(); c.moveTo(3.4, -5.5 - bob); c.lineTo(8 + sw * .3, -9 - bob + sw); c.stroke(); }
   c.restore();
   if (h.hp < h.max) {
@@ -1346,6 +1382,7 @@ function draw() {
   for (const p of parts) {
     const a = clamp(p.life / p.max, 0, 1);
     if (p.ghost) { c.globalCompositeOperation = 'lighter'; glow(p.x, p.y, 5, 'rgba(230,245,255,.9)', a); c.globalCompositeOperation = 'source-over'; continue; }
+    if (p.tp) { const e = 1 - a; c.globalCompositeOperation = 'lighter'; glow(p.x, p.y, p.hh * .9, 'rgba(160,120,255,.6)', a); c.fillStyle = `rgba(220,205,255,${a})`; c.beginPath(); c.ellipse(p.x, p.y, 1 + 5 * a, p.hh * (.4 + .5 * e), 0, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; continue; }
     if (p.ring) { c.strokeStyle = `rgba(232,201,138,${a})`; c.lineWidth = .8; c.beginPath(); c.arc(p.x, p.y, 40 * (1 - a) + 4, 0, 7); c.stroke(); continue; }
     c.globalAlpha = a; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, .9, 0, 7); c.fill(); c.globalAlpha = 1;
   }
@@ -1804,6 +1841,7 @@ function showResult(w, stars) {
     <div class="res">
       <span>Durchgekommen</span><b class="${W.leaks ? 'bad' : 'good'}">${W.leaks} von ${waveTotal} (${pct} %)</b>
       <span>Getötet</span><b>${W.kills}</b>
+      ${isBoss(w) ? `<span>Boss</span><b class="${W.bossLeaks ? 'bad' : 'good'}">${W.bossLeaks ? 'durchgebrochen' : 'besiegt'}</b>` : ''}
       ${advanced ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${S.retry > 1 ? ' (halbiert)' : ''}</span><b class="gold">+${W.gold}</b>`}
     </div>
     ${choice ? `<p>Nicht perfekt. Willst du die Runde nochmal spielen, um mehr Sterne zu holen, oder weiterziehen?</p>` : `<p><b>${advanced ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}${advanced ? ` · Stärke ${mulText(waveHpMul(S.wave))}` : ''}</p>`}
@@ -1823,6 +1861,7 @@ function showResult(w, stars) {
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice
       ? 'Bestanden, aber nicht perfekt. Nochmal: du behältst dein Gold und deine Bauten, Kills geben nur halbes Gold. Weiter: Restgold verfällt, die nächste Runde startet mit festem Budget.'
       : passed ? (newWorld ? 'Boss besiegt! Es geht in eine neue Welt: leeres Feld und dreifaches Budget.' : `Restgold verfällt, deine Bauten bleiben stehen.${colsFor(S.wave) > colsFor(w) ? ' Die Strecke wird länger.' : ''}`)
+      : W.bossLeaks ? 'Der Boss ist durchgekommen. Eine Bossrunde ist erst bestanden, wenn jeder Paladin gefallen ist.'
       : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, in Wiederholungen gibt es aber nur halbes Gold pro Kill.'}</p>
     <p>Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
     ${newTypes ? `<p>Neu: ${HT[newTypes].name} - ${HERO_INFO[newTypes]}</p>` : ''}
