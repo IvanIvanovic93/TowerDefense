@@ -71,4 +71,4 @@ Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab R
 
 ## Dunkler Lord
 
-Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen dorthin, eine Markierung zeigt den Einschlag. Kills geben Erfahrung, jede Lord-Stufe einen Punkt für Wurfkraft, Nachladen oder Radius. Der Lord behält seine Stufe, bis ein neues Spiel beginnt.
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen dorthin, eine Markierung zeigt den Einschlag. Jeder besiegte Boss bringt einen Lordpunkt. Ausgeben kostet zusätzlich Gold in Höhe eines Rundenbudgets, bei jeder weiteren Stufe derselben Fähigkeit 50 % mehr (Wurfkraft, Nachladen oder Radius). Setzt man die Burg zurück oder startet neu, fängt der Lord wieder bei Stufe 1 an.

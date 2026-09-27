@@ -143,7 +143,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .lrow>div{flex:1}
 .lrow b{font-family:var(--display);font-weight:500;letter-spacing:.08em}
 .muted{color:var(--muted)!important}
-.lup{width:46px;height:40px;font-size:20px;flex:none;padding:0}
+.lup{min-width:96px;height:44px;flex:none;padding:0 12px;flex-direction:row;gap:6px;font-size:13px}
 .btn.up{flex-direction:row;gap:8px}
 .good{color:var(--green)!important}.bad{color:#f2a58e!important}.gold{color:var(--gold)!important}
 #map{position:fixed;inset:0;z-index:15;background:var(--bg)}
@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.3', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-27.4', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -467,6 +467,7 @@ function endWave() {
   phase = 'build';
   const done = S.wave, stars = starsFor(W.leaks, waveTotal);
   if (stars > 0) { S.stars[done] = Math.max(S.stars[done] || 0, stars); S.best = Math.max(S.best, done); }
+  if (stars > 0 && isBoss(done) && done > lord.lastBoss) { lord.earned++; lord.lastBoss = done; }
   // Perfekt: direkt weiter. Bestanden, aber nicht perfekt: der Spieler entscheidet im Ergebnisfenster.
   if (stars === 3) advance(done);
   else if (stars === 0) S.retry = (S.retry || 0) + 1;
@@ -509,9 +510,6 @@ function kill(h, src) {
   const g = Math.max(1, Math.round(h.def.gold * (1 + (S.wave - 1) * .025) * (S.retry ? .5 : 1)));
   S.gold += g; S.kills++; W.kills++; W.gold += g;
   if (!seen.firstKill) { markSeen('firstKill'); setTimeout(() => toast('Der erste Held ist gefallen. Jeder Kill bringt Gold.', 2600), 50); }
-  const lvBefore = lordLevel();
-  lord.xp += h.def.boss ? 10 : 1;
-  if (lordLevel() > lvBefore) { saveLord(); texts.push({ x: CASTLE_C * TS + 40, y: 0, txt: 'Lord Stufe ' + lordLevel() + '!', col: '#d9a8ff', life: 2, max: 2 }); }
   lordLaugh = 1.2;
   const y = src === 'pit' ? GROUND * TS - 4 : h.y - h.h / 2;
   for (let k = 0; k < 8; k++) parts.push({ x: h.x, y, vx: rnd(-40, 40), vy: rnd(-80, -20), life: rnd(.4, .8), max: .8, col: k < 3 ? '#ffd83a' : '#c9c9d9', g: 200 });
@@ -839,15 +837,17 @@ const LORD_SKILLS = {
 const stoneDmg = (l = lord.pts.dmg) => 18 + l * 10;
 const stoneCd = (l = lord.pts.cd) => 1.5 - l * .11;
 const stoneRad = (l = lord.pts.rad) => 10 + l * 2;
-const lordXpFor = lv => Math.round(25 * Math.pow(lv - 1, 1.6));
-function lordLevel() { let l = 1; while (lordXpFor(l + 1) <= lord.xp) l++; return l; }
-const lordFree = () => Math.max(0, lordLevel() - 1 - (lord.pts.dmg + lord.pts.cd + lord.pts.rad));
+// Lordpunkte gibt es nur für besiegte Bosse (einer pro Boss). Ausgeben kostet zusätzlich viel Gold.
+const lordSpent = () => lord.pts.dmg + lord.pts.cd + lord.pts.rad;
+const lordLevel = () => 1 + lordSpent();
+const lordFree = () => Math.max(0, lord.earned - lordSpent());
+const lordCost = k => Math.round(baseBudget(S.wave) * (1 + lord.pts[k] * .5) / 10) * 10;
 function loadLord() {
-  try { const d = JSON.parse(localStorage.getItem(LORD_KEY)); if (d && d.pts) return { xp: d.xp || 0, pts: { dmg: 0, cd: 0, rad: 0, ...d.pts } }; } catch (e) {}
-  return { xp: 0, pts: { dmg: 0, cd: 0, rad: 0 } };
+  try { const d = JSON.parse(localStorage.getItem(LORD_KEY)); if (d && d.pts) return { earned: d.earned || 0, lastBoss: d.lastBoss || 0, pts: { dmg: 0, cd: 0, rad: 0, ...d.pts } }; } catch (e) {}
+  return { earned: 0, lastBoss: 0, pts: { dmg: 0, cd: 0, rad: 0 } };
 }
 function saveLord() { try { localStorage.setItem(LORD_KEY, JSON.stringify(lord)); } catch (e) {} }
-function resetLord() { lord = { xp: 0, pts: { dmg: 0, cd: 0, rad: 0 } }; saveLord(); }
+function resetLord() { lord = { earned: 0, lastBoss: 0, pts: { dmg: 0, cd: 0, rad: 0 } }; saveLord(); }
 let lord = loadLord();
 let stones = [], stoneT = 0, lordThrow = 0;
 const lordPos = () => { const l = CASTLE_LAYOUT[castleStage()].lord; return { x: CASTLE_C * TS + l[0], y: GROUND * TS - l[1] - 8 }; };
@@ -1714,20 +1714,25 @@ function tryFullscreen() {
 }
 function showLord(resume) {
   const wasPaused = resume === undefined ? paused : resume; paused = true;
-  const lv = lordLevel(), cur = lordXpFor(lv), nxt = lordXpFor(lv + 1), free = lordFree();
+  const free = lordFree(), build = phase === 'build';
   const rows = Object.entries(LORD_SKILLS).map(([k, sk]) => {
-    const l = lord.pts[k], max = l >= LORD_MAX;
+    const l = lord.pts[k], max = l >= LORD_MAX, cost = lordCost(k);
     return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` > </span><span class="gold">${sk.txt(l + 1)}`}</span></div>
-      <button class="btn lup" data-k="${k}" ${!free || max ? 'disabled' : ''}>+</button></div>`;
+      <button class="btn lup" data-k="${k}" ${!free || max || !build || S.gold < cost ? 'disabled' : ''}>${max ? 'Max.' : `${cost} ${ico('coin')}`}</button></div>`;
   }).join('');
-  showCard(`<div class="hrow"><h2>Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:8px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>${infoBtn('mInfo')}</div>
-    <div class="bar xp"><i style="width:${Math.min(100, (lord.xp - cur) / (nxt - cur) * 100)}%"></i></div>
+  showCard(`<div class="hrow"><h2>Lord · Stufe ${lordLevel()} <span class="${free ? 'gold' : 'muted'}" style="font-size:8px">${free} Lordpunkt${free === 1 ? '' : 'e'} frei</span></h2>${infoBtn('mInfo')}</div>
+    <p class="muted">${free ? (build ? 'Ein Lordpunkt und Gold machen den Lord stärker.' : 'Ausbauen geht nur in der Bauphase.') : 'Jeder besiegte Boss bringt einen Lordpunkt.'}</p>
     ${rows}
     <div class="row"><button class="btn pri" id="mBack">Zurück</button></div>`);
-  document.querySelectorAll('.lup').forEach(b => b.onclick = () => { if (lordFree() <= 0 || lord.pts[b.dataset.k] >= LORD_MAX) return; lord.pts[b.dataset.k]++; saveLord(); showLord(wasPaused); updateUI(); });
+  document.querySelectorAll('.lup').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, cost = lordCost(k);
+    if (phase !== 'build' || lordFree() <= 0 || lord.pts[k] >= LORD_MAX || S.gold < cost) return;
+    S.gold -= cost; lord.pts[k]++; saveLord(); save(); showLord(wasPaused); updateUI();
+  });
   $('mBack').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
-  $('mInfo').onclick = () => showInfo('Dunkler Lord', `<p>${lord.xp - cur} / ${nxt - cur} Erfahrung bis Stufe ${lv + 1}. Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Stufe gibt einen Punkt.</p>
-    <p>In der Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin.</p><p>Der Lord behält seine Stufe über alle Runden, bis du ein neues Spiel startest.</p>`, () => showLord(wasPaused));
+  $('mInfo').onclick = () => showInfo('Dunkler Lord', `<p>In der Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin.</p>
+    <p>Jeder besiegte Boss bringt einen Lordpunkt. Einen Punkt ausgeben kostet zusätzlich Gold, und zwar jedes Mal mehr. Das Gold fehlt dir dann für Fallen.</p>
+    <p>Der Lord bleibt über alle Runden stark. Setzt du die Burg zurück oder startest ein neues Spiel, fängt er wieder bei Stufe 1 an.</p>`, () => showLord(wasPaused));
 }
 function showCastle(resume, back) {
   const wasPaused = resume === undefined ? paused : resume; paused = true;
@@ -1801,7 +1806,7 @@ function showResult(w, stars) {
       ${advanced ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${S.retry > 1 ? ' (halbiert)' : ''}</span><b class="gold">+${W.gold}</b>`}
     </div>
     ${choice ? `<p>Nicht perfekt. Willst du die Runde nochmal spielen, um mehr Sterne zu holen, oder weiterziehen?</p>` : `<p><b>${advanced ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}${advanced ? ` · Stärke ${mulText(waveHpMul(S.wave))}` : ''}</p>`}
-    <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
+    <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Lordpunkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
       ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kills halbes Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
       : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: jeder Stern wird zum Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
