@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.8', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-27.9', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -323,7 +323,7 @@ const key = (c, r) => c * 16 + r;
 const thingAt = (c, r) => TM.get(key(c, r));
 function rebuildTM() { TM = new Map(); for (const t of S.things) TM.set(key(t.c, t.r), t); }
 
-function newState() { return { killGold: 0, gold: budget(1), wave: 1, things: [], kills: 0, leaks: 0, stars: {}, retry: 0, best: 0 }; }
+function newState() { return { goldFrac: 0, gold: budget(1), wave: 1, things: [], kills: 0, leaks: 0, stars: {}, retry: 0, best: 0 }; }
 function save() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify({ ...S, things: S.things.map(t => ({ type: t.type, c: t.c, r: t.r, lvl: t.lvl, spent: t.spent })) })); } catch (e) {}
 }
@@ -436,8 +436,9 @@ function planned(w) { if (!preview || preview.w !== w) preview = { w, list: wave
 
 function starsFor(leaks, total) { const r = leaks / total; return leaks === 0 ? 3 : r <= .05 ? 2 : r < .1 ? 1 : 0; }
 const baseBudget = w => 150 + (w - 1) * 20;
-const killCap = w => Math.round(baseBudget(w) * .5 / 10) * 10;      // höchstens so viel Kill-Gold pro Runde
-const killRoom = () => Math.max(0, killCap(S.wave) - (S.killGold || 0));
+// Kill-Gold: ein Drittel des Grundwerts, jeder weitere Versuch derselben Runde 30 % weniger, mindestens 1 Gold pro 4 Kills
+const killMul = () => Math.pow(.7, S.retry || 0);
+const killValue = h => Math.max(.25, h.def.gold * (1 + (S.wave - 1) * .025) * .35 * killMul());
 function budget(w) {
   // Nach dem Boss: leeres Feld und das Dreifache eines normalen Rundenbudgets
   return w > 1 && isBoss(w - 1) ? baseBudget(w) * 3 : baseBudget(w);
@@ -463,7 +464,7 @@ function startWave() {
 
 function advance(done) {
   if (isBoss(done)) S.things = []; // nach dem Boss: Feld räumen, neue Welt
-  S.wave++; S.retry = 0; S.killGold = 0; S.gold = budget(S.wave);
+  S.wave++; S.retry = 0; S.goldFrac = 0; S.gold = budget(S.wave);
   applyLength(S.wave);
 }
 function endWave() {
@@ -511,9 +512,9 @@ function knock(h, dir = -1) { h.kb = .35; h.vx = 50 * dir; h.vy = -150; h.onGrou
 function kill(h, src) {
   if (h.dead) return;
   h.dead = true;
-  // Kill-Gold ist pro Runde gedeckelt (über alle Versuche zusammen), damit Wiederholen kein Gold farmt
-  const g = Math.min(killRoom(), Math.max(1, Math.round(h.def.gold * (1 + (S.wave - 1) * .025))));
-  S.killGold = (S.killGold || 0) + g;
+  // Bruchteile sammeln, damit auch 1 Gold pro 4 Kills genau ankommt
+  S.goldFrac = (S.goldFrac || 0) + killValue(h);
+  const g = Math.floor(S.goldFrac); S.goldFrac -= g;
   S.gold += g; S.kills++; W.kills++; W.gold += g;
   if (!seen.firstKill) { markSeen('firstKill'); setTimeout(() => toast('Der erste Held ist gefallen. Jeder Kill bringt Gold.', 2600), 50); }
   lordLaugh = 1.2;
@@ -1854,12 +1855,12 @@ function showResult(w, stars) {
       <span>Durchgekommen</span><b class="${W.leaks ? 'bad' : 'good'}">${W.leaks} von ${waveTotal} (${pct} %)</b>
       <span>Getötet</span><b>${W.kills}</b>
       ${isBoss(w) ? `<span>Boss</span><b class="${W.bossLeaks ? 'bad' : 'good'}">${W.bossLeaks ? 'durchgebrochen' : 'besiegt'}</b>` : ''}
-      ${advanced ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${killRoom() ? '' : ' (Obergrenze erreicht)'}</span><b class="gold">+${W.gold}</b>`}
+      ${advanced ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills</span><b class="gold">+${W.gold}</b>`}
     </div>
     ${choice ? `<p>Nicht perfekt. Willst du die Runde nochmal spielen, um mehr Sterne zu holen, oder weiterziehen?</p>` : `<p><b>${advanced ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}${advanced ? ` · Stärke ${mulText(waveHpMul(S.wave))}` : ''}</p>`}
     <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Lordpunkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
-      ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kill-Gold gedeckelt</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
+      ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kills 30 % weniger Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
       : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: jeder Stern wird zum Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
   if (choice) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; save(); hideCard(); updateUI(); };
@@ -1871,10 +1872,10 @@ function showResult(w, stars) {
   resetButton('mReset');
   if ($('mReset')) markSeen('resetHint');
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice
-      ? 'Bestanden, aber nicht perfekt. Nochmal: du behältst dein Gold und deine Bauten. Kills geben pro Runde insgesamt höchstens ${killCap(w)} Gold, über alle Versuche zusammen. Weiter: Restgold verfällt, die nächste Runde startet mit festem Budget.'
+      ? 'Bestanden, aber nicht perfekt. Nochmal: du behältst dein Gold und deine Bauten, jeder weitere Versuch bringt 30 % weniger Gold pro Kill. Weiter: Restgold verfällt, die nächste Runde startet mit festem Budget.'
       : passed ? (newWorld ? 'Boss besiegt! Es geht in eine neue Welt: leeres Feld und dreifaches Budget.' : `Restgold verfällt, deine Bauten bleiben stehen.${colsFor(S.wave) > colsFor(w) ? ' Die Strecke wird länger.' : ''}`)
       : W.bossLeaks ? 'Der Boss ist durchgekommen. Eine Bossrunde ist erst bestanden, wenn jeder Paladin gefallen ist.'
-      : `Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du. Kills geben pro Runde insgesamt höchstens ${killCap(w)} Gold, über alle Versuche zusammen.`}</p>
+      : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, jeder weitere Versuch bringt aber 30 % weniger Gold pro Kill.'}</p>
     <p>Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
     ${newTypes ? `<p>Neu: ${HT[newTypes].name} - ${HERO_INFO[newTypes]}</p>` : ''}
     ${!choice && next.paladin ? `<p>Bossrunde: ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Löchern.</p>` : ''}`, () => showResult(w, stars));
