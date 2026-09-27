@@ -1,42 +1,45 @@
 # Fallenfürst
 
-2D-Plattformer-Tower-Defense fürs Handy. Du bist der Dunkle Lord: Dutzende Helden rennen gleichzeitig vom Portal zu deinem Schloss und versuchen, deinen Fallen auszuweichen. Zwischen den Runden stellst du neue Fallen auf. Jeder getötete Held bringt Gold. Das Schloss geht nicht kaputt - Ziel ist, dass kein Held mehr durchkommt.
-
-## Regeln
-
-- **Sterne:** Eine Runde ist bestanden, wenn unter 10 % der Helden durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.
-- **Nicht bestanden:** Die Runde wird wiederholt. Das Gold aus den Kills bleibt, in Wiederholungen gibt es aber nur halbes Gold pro Kill.
-- **Budget:** Jede Runde startet mit festem Gold (150 + 20 pro Runde). Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.
-- **Boss:** Jede 5. Runde kommen Paladine. Danach wird das Feld geräumt, und du baust mit einem großen Budget neu auf (Summe aller bisherigen Rundenbudgets).
-- **Strecke:** Am Anfang kurz (passt auf einen Bildschirm), mit jeder geschafften Runde 2 Felder länger.
-- **Barrikaden:** Helden bleiben im Feld davor stehen, Fallen dort treffen sie also voll.
-- **Stampfer:** Solange der Block unten ist, kommt keiner vorbei.
-
-## Dunkler Lord
-
-Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen auf den Boden unter der Tippstelle. Eine blinkende Markierung zeigt den Einschlag, trifft der Stein unterwegs einen Helden, schlägt er dort ein (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt über alle Runden erhalten und wird erst bei einem neuen Spiel zurückgesetzt.
+Ein Level-Baukasten für das Handy, in dem du der Bösewicht bist. Dutzende Helden rennen pro Runde vom Portal zu deinem Schloss. Du baust die Strecke: Blöcke, Löcher, Fallen (auch frei in der Luft) und kleine Gegner. Die Helden laufen, springen über Lücken und Mauern, weichen Fallen aus, die sie erkennen, und springen deine Gegner platt. Jeder getötete Held bringt Gold. Das Schloss geht nicht kaputt, Ziel ist, dass kein Held durchkommt.
 
 ## Spielen
 
-Reines HTML5/Canvas ohne Build-Schritt, im Pixel-Art-Stil: Die Welt wird in halber Auflösung gerendert, auf eine feste 24-Farben-Palette reduziert (Verläufe werden zu Bayer-Dithering) und pixelgenau hochskaliert. UI mit "Press Start 2P", 8px-Raster, Blockrändern und harten Schatten. `index.html` im Browser öffnen oder das Repo per GitHub Pages hosten (Settings → Pages → Branch wählen). Am Handy: Seite öffnen → "Zum Startbildschirm hinzufügen" startet das Spiel im Vollbild-Querformat.
+Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per GitHub Pages hosten. Am Handy: "Zum Startbildschirm hinzufügen" startet es im Vollbild-Querformat.
 
-## Fallen
+## Grafik
 
-| Falle | Wirkung |
+Echte Pixel-Art: Welt aus 16×16-Kacheln, alle Figuren und Fallen als handgesetzte Pixel-Sprites, ganzzahlig skaliert ohne Filter. Drei Welten mit eigener Farbwelt wechseln nach jedem Boss: Wiese, Höhle, Burg (mit Lava).
+
+## Bauteile
+
+| Bauteil | Wirkung |
 |---|---|
+| Block | Mauern, Treppen, Plattformen. Helden springen drüber oder schlagen ihn kaputt |
+| Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
 | Stacheln | Schaden am Boden |
-| Grube | Sofortiger Tod, füllt sich aber mit gefallenen Helden (4/6/9 pro Feld). Upgrade = tiefer und getarnt |
-| Barrikade | Blockiert, Helden müssen sie zerschlagen. Wird jede Runde repariert |
-| Frostrune | Verlangsamt, verlangsamte Helden springen zu kurz |
-| Katapult | Schleudert Helden zurück durch deine Fallen |
-| Flammen | Feuersäule im Takt, trifft auch Springer |
-| Stampfer | Zerquetscht alles darunter im Takt |
-| Pfeilturm | Schießt auf den vordersten Helden |
+| Flammen | Feuersäule im Takt, drei Felder hoch |
+| Feuerstange | Kreisende Feuerkugeln, frei in der Luft |
+| Stampfer | Kracht herunter, sobald ein Held darunter ist |
+| Kanone | Schießt Kugeln nach links, zählt als Block |
+| Katapult | Schleudert Helden zurück |
+| Kriecher | Kleiner Gegner, läuft hin und her, kann plattgesprungen werden |
+| Flatterer | Fliegt auf und ab |
+| Stachi | Stacheliger Gegner, draufspringen verletzt |
 
-Jede Falle hat 3 Stufen. Verkaufen gibt 70 % zurück, in derselben Bauphase 100 %.
+Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
+
+## Regeln
+
+- **Sterne:** Bestanden unter 10 % Durchbrüchen (Bronze), höchstens 5 % Silber, keiner Gold.
+- **Nicht bestanden:** Runde wiederholen, Gold aus Kills bleibt (in Wiederholungen halbiert).
+- **Budget:** Jede Runde 150 + 20 pro Runde. Restgold verfällt, Bauten bleiben.
+- **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und großem Budget.
+- **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
 ## Helden
 
-Knappe, Schurke (springt weit), Ritter (gepanzert), Klerikerin (heilt), Magier (schwebt über Bodenfallen), Paladin (Boss, klettert aus Gruben). Helden erkennen Fallen abhängig von ihrem Geschick und springen darüber; mit jeder Runde werden sie klüger, springen weiter und halten mehr aus.
+Knappe, Schurke (springt weit und hoch), Ritter (gepanzert, springt kaum), Klerikerin (heilt), Magier (schwebt über Lücken und Bodenfallen), Paladin (Boss, klettert aus Löchern). Mit jeder Runde werden sie klüger, springen weiter und halten mehr aus. Wer von einem Gegner getroffen wird, lernt daraus.
 
-Der Spielstand wird automatisch im Browser gespeichert.
+## Dunkler Lord
+
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen dorthin, eine Markierung zeigt den Einschlag. Kills geben Erfahrung, jede Lord-Stufe einen Punkt für Wurfkraft, Nachladen oder Radius. Der Lord behält seine Stufe, bis ein neues Spiel beginnt.
