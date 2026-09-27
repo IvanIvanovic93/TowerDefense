@@ -2,7 +2,14 @@
 
 2D-Plattformer-Tower-Defense fürs Handy. Du bist der Dunkle Lord: Dutzende Helden rennen gleichzeitig vom Portal zu deinem Schloss und versuchen, deinen Fallen auszuweichen. Zwischen den Runden stellst du neue Fallen auf. Jeder getötete Held bringt Gold. Das Schloss geht nicht kaputt - Ziel ist, dass kein Held mehr durchkommt.
 
-Die nächste Runde gibt es erst, wenn in einer Runde kein einziger Held durchgekommen ist. Sonst wird die Runde wiederholt, das verdiente Gold bleibt. Die Strecke ist am Anfang kurz (passt auf einen Bildschirm) und wird mit jeder geschafften Runde länger.
+## Regeln
+
+- **Sterne:** Eine Runde ist bestanden, wenn unter 10 % der Helden durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.
+- **Nicht bestanden:** Die Runde wird wiederholt. Das Gold aus den Kills bleibt, in Wiederholungen gibt es aber nur halbes Gold pro Kill.
+- **Budget:** Jede Runde startet mit festem Gold (150 + 20 pro Runde). Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.
+- **Boss:** Jede 5. Runde kommen Paladine. Danach wird das Feld geräumt, und du baust mit einem großen Budget neu auf (Summe aller bisherigen Rundenbudgets).
+- **Strecke:** Am Anfang kurz (passt auf einen Bildschirm), mit jeder geschafften Runde 2 Felder länger.
+- **Barrikaden:** Helden bleiben im Feld davor stehen, Fallen dort treffen sie also voll.
 
 ## Spielen
 

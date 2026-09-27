@@ -73,6 +73,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .res{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;margin:8px 0}
 .res b{text-align:right}
 .big{font-size:18px;font-weight:800;margin:6px 0}
+.stars i{font-style:normal;color:#4a3160;font-size:26px;letter-spacing:2px}.stars i.on{color:var(--gold)}
+.card p.legend{font-size:12px}
 .good{color:var(--green)}.bad{color:var(--red)}.gold{color:var(--gold)}
 #rotate{position:fixed;inset:0;z-index:20;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
 #rotate .ph{font-size:56px;animation:rot 2s ease-in-out infinite}
@@ -186,7 +188,7 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 
 function newState() {
-  return { gold: 150, wave: 1, grid: new Array(NT_MAX).fill(null), kills: 0, leaks: 0, perfect: 0, streak: 0, best: 0 };
+  return { gold: budget(1), wave: 1, grid: new Array(NT_MAX).fill(null), kills: 0, leaks: 0, stars: {}, retry: 0, best: 0 };
 }
 
 function save() {
@@ -201,6 +203,7 @@ function load() {
     if (!raw) return null;
     const d = JSON.parse(raw);
     const s = { ...newState(), ...d };
+    s.stars = d.stars || {};
     s.grid = new Array(NT_MAX).fill(null);
     (d.grid || []).forEach((t, i) => { if (t && TRAPS[t.type] && i < NT_MAX) s.grid[i] = makeTrap(t.type, i, t.lvl, t.spent, false); });
     return s;
@@ -218,11 +221,11 @@ function resetTrap(tr) {
 }
 
 // ================= Wellen =================
-function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 6) * .2 + Math.max(0, w - 12) * .3; }
+function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 5) * .3 + Math.max(0, w - 10) * .4; }
 // Helden lernen dazu: sie erkennen Fallen öfter und springen weiter
 const waveSkill = w => .15 + Math.min(.35, (w - 1) * .03);
 const waveRng = w => 1 + Math.min(.4, (w - 1) * .03);
-function waveCount(w) { return Math.min(34 + w * 4, 130); }
+function waveCount(w) { return Math.min(32 + w * 6, 150); }
 function waveList(w) {
   const pool = [['squire', 10]];
   if (w >= 2) pool.push(['rogue', 3 + w * .5]);
@@ -236,7 +239,8 @@ function waveList(w) {
     for (const p of pool) { r -= p[1]; if (r <= 0) { list.push(p[0]); break; } }
     if (list.length < waveCount(w) - n + 1) list.push('squire');
   }
-  const bosses = (w % 5 === 0 ? w / 5 : 0) + (w >= 12 ? Math.floor((w - 8) / 4) : 0);
+  // Jede 5. Runde ist eine Bossrunde mit Paladin(en)
+  const bosses = isBoss(w) ? w / 5 : 0;
   for (let k = 0; k < bosses; k++) list.splice(Math.floor(list.length * (.3 + .4 * Math.random())), 0, 'paladin');
   return list;
 }
@@ -272,20 +276,36 @@ function spawnHero(type) {
   });
 }
 
+// Sterne: 3 = keiner durch, 2 = höchstens 5 %, 1 = unter 10 % (bestanden), 0 = nicht bestanden
+function starsFor(leaks, total) {
+  const r = leaks / total;
+  return leaks === 0 ? 3 : r <= .05 ? 2 : r < .1 ? 1 : 0;
+}
+// Festes Budget pro Runde. Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.
+const isBoss = w => w % 5 === 0;
+// Nach einer Bossrunde wird das Feld geräumt, deshalb gibt es dann ein größeres Startbudget
+// (alles, was man bis dahin an Rundenbudget bekommen hätte)
+const baseBudget = w => 150 + (w - 1) * 20;
+function budget(w) {
+  if (w === 1 || !isBoss(w - 1)) return baseBudget(w);
+  let sum = 0; for (let k = 1; k <= w; k++) sum += baseBudget(k);
+  return Math.round(sum / 10) * 10;
+}
+
 function endWave() {
   phase = 'build';
-  const perfect = W.leaks === 0;
-  let bonus = 0;
-  if (perfect) { bonus = 20 + S.wave * 4; S.perfect++; S.streak++; S.retry = 0; } else { S.streak = 0; S.retry = (S.retry || 0) + 1; }
-  S.gold += bonus;
-  S.best = Math.max(S.best, S.wave);
-  const done = S.wave;
-  // Nächste Runde nur, wenn keiner durchgekommen ist. Sonst dieselbe Runde nochmal.
-  if (perfect) { S.wave++; applyLength(S.wave); }
+  const done = S.wave, stars = starsFor(W.leaks, waveTotal);
+  if (stars > 0) {
+    S.stars[done] = Math.max(S.stars[done] || 0, stars);
+    S.best = Math.max(S.best, done);
+    if (isBoss(done)) S.grid = new Array(NT_MAX).fill(null);
+    S.wave++; S.retry = 0; S.gold = budget(S.wave);
+    applyLength(S.wave);
+  } else S.retry = (S.retry || 0) + 1;
   S.grid.forEach(tr => tr && resetTrap(tr));
   arrows = [];
   save();
-  showResult(done, perfect, bonus);
+  showResult(done, stars);
   updateUI();
 }
 
@@ -300,7 +320,8 @@ function moveX(h, dx) {
     for (let k = tileAt(a); k <= tileAt(b); k++) {
       const tr = trapAt(k);
       if (!tr || tr.type !== 'wall' || tr.hp <= 0) continue;
-      const L = k * TILE + 8, R = k * TILE + 40;
+      // Helden bleiben im Feld VOR der Barrikade stehen, damit Fallen dort sie treffen
+      const L = k * TILE, R = k * TILE + 34;
       if (dx > 0 && h.x + 7 <= L + .01 && nx + 7 > L) { nx = L - 7; h.blocked = tr; if (h.st === 'air') h.vx = 0; }
       else if (dx < 0 && h.x - 7 >= R - .01 && nx - 7 < R) { nx = R + 7; h.vx = 0; }
     }
@@ -394,7 +415,8 @@ function damage(h, amt, src) {
 function kill(h, src) {
   if (h.dead) return;
   h.dead = true;
-  const g = Math.round(h.def.gold * (1 + (S.wave - 1) * .025));
+  // Wiederholte Runden geben nur halbes Gold
+  const g = Math.max(1, Math.round(h.def.gold * (1 + (S.wave - 1) * .025) * (S.retry ? .5 : 1)));
   S.gold += g; S.kills++; W.kills++; W.gold += g;
   lordLaugh = 1.2;
   const y = src === 'pit' ? GY - 6 : h.y - 14;
@@ -733,6 +755,7 @@ function drawTrap(tr, x, layer) {
       if (tr.cd > 0 && phase === 'wave') { c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(x + 8, GY + 4, 32, 3); c.fillStyle = '#ffd24a'; c.fillRect(x + 8, GY + 4, 32 * (1 - tr.cd / st.cd), 3); }
     } break;
     case 'wall': if (layer) return; {
+      x -= 6; // Palisade steht am linken Feldrand
       if (tr.hp <= 0) {
         c.fillStyle = '#5a3a20';
         for (let k = 0; k < 5; k++) { c.save(); c.translate(x + 8 + k * 7, GY - 3); c.rotate(k * .7); c.fillRect(-6, -2, 12, 4); c.restore(); }
@@ -1120,7 +1143,10 @@ const HELP = `<ul>
   <li>Du bist der <b>Dunkle Lord</b>. Helden rennen vom Portal (links) zu deinem Schloss (rechts).</li>
   <li>Zwischen den Runden: unten eine Falle wählen, dann auf den Weg tippen. Falle antippen = Upgrade / Verkaufen.</li>
   <li>Wischen verschiebt die Kamera, die Leiste oben zeigt die ganze Strecke.</li>
-  <li>Jeder getötete Held bringt Gold. Die nächste Runde gibt es erst, wenn <b>kein Held</b> durchkommt. Sonst wiederholst du die Runde und behältst dein Gold.</li>
+  <li>Bestanden ist eine Runde, wenn <b>unter 10 %</b> der Helden durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.</li>
+  <li>Jede Runde gibt ein festes Budget. Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.</li>
+  <li>Jede 5. Runde kommt ein Paladin als Boss. Danach wird das Feld geräumt und du startest mit großem Budget neu.</li>
+  <li>Nicht bestanden? Du wiederholst die Runde und behältst das Gold aus den Kills (in Wiederholungen nur die Hälfte).</li>
   <li>Helden springen über Fallen, die sie erkennen. Schurken springen weit, Ritter kaum. Magier schweben über Bodenfallen. Klerikerinnen heilen.</li>
   <li>Tipp: Kombiniere! Barrikade hinter Stacheln, Katapult vor Flammen, breite Gruben, Frost vor Gruben (verlangsamte Helden springen zu kurz).</li>
 </ul>`;
@@ -1158,7 +1184,7 @@ function tryFullscreen() {
 function showMenu() {
   const wasPaused = paused; paused = true;
   showCard(`<h2>Pause</h2>
-    <div class="res"><span>Runde</span><b>${S.wave}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Perfekte Runden</span><b>${S.perfect}</b></div>
+    <div class="res"><span>Runde</span><b>${S.wave}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Sterne</span><b>${Object.values(S.stars).reduce((a, b) => a + b, 0)} / ${(S.wave - 1) * 3}</b></div>
     <div class="row"><button class="btn" id="mRes">Weiter</button><button class="btn alt" id="mNew">Neues Spiel</button></div>
     <details><summary>So wird gespielt</summary>${HELP}</details>`);
   $('mRes').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
@@ -1170,22 +1196,28 @@ function showMenu() {
   };
 }
 
-function showResult(w, perfect, bonus) {
+const STAR_NAMES = ['', 'Bronze', 'Silber', 'Gold'];
+function starRow(n) { return `<span class="stars">${'<i class="on">★</i>'.repeat(n)}${'<i>★</i>'.repeat(3 - n)}</span>`; }
+function showResult(w, stars) {
+  const passed = stars > 0;
   const next = heroMix(S.wave);
   const names = Object.entries(next).map(([t, n]) => `${n}× ${HT[t].name}`).join(', ');
-  const newTypes = perfect && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
-  showCard(`<h2>Runde ${w} ${perfect ? 'geschafft' : 'nicht geschafft'}</h2>
-    <div class="big ${perfect ? 'good' : 'bad'}">${perfect ? 'Perfekt! Keiner ist durchgekommen.' : `${W.leaks} Held${W.leaks === 1 ? '' : 'en'} durchgekommen`}</div>
-    ${perfect ? (roadTiles(S.wave) > roadTiles(w) ? '<p>Die Strecke zu deinem Schloss wird länger.</p>' : '') : '<p>Erst wenn keiner mehr durchkommt, geht es weiter. Dein Gold behältst du: bau nach und versuch es nochmal.</p>'}
+  const newTypes = passed && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
+  const pct = Math.round(W.leaks / waveTotal * 100);
+  showCard(`<h2>Runde ${w} ${passed ? 'bestanden' : 'nicht bestanden'}</h2>
+    <div class="big ${passed ? 'good' : 'bad'}">${starRow(stars)} ${passed ? STAR_NAMES[stars] : ''}</div>
     <div class="res">
+      <span>Durchgekommen</span><b class="${W.leaks ? 'bad' : 'good'}">${W.leaks} von ${waveTotal} (${pct} %)</b>
       <span>Getötet</span><b>${W.kills}</b>
-      <span>Gold durch Kills</span><b class="gold">+${W.gold}</b>
-      ${perfect ? `<span>Perfekt-Bonus</span><b class="gold">+${bonus}</b>` : ''}
-      <span>Serie perfekter Runden</span><b>${S.streak}</b>
+      ${passed ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${S.retry > 1 ? ' (halbiert)' : ''}</span><b class="gold">+${W.gold}</b>`}
     </div>
-    <p><b>${perfect ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
+    <p>${passed
+      ? (isBoss(w) ? '<b class="gold">Boss besiegt!</b> Das Feld wird geräumt, du baust mit einem großen Budget neu auf.' : `Restgold verfällt, deine Fallen bleiben stehen.${roadTiles(S.wave) > roadTiles(w) ? ' Die Strecke wird länger.' : ''}`)
+      : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, in Wiederholungen gibt es aber nur halbes Gold pro Kill.'}</p>
+    <p class="legend">Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
+    <p><b>${passed ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
     ${newTypes ? `<p class="gold">Neu: ${HT[newTypes].name} - ${{ rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen! Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' }[newTypes]}</p>` : ''}
-    ${next.paladin ? '<p class="bad"><b>Achtung:</b> Ein Paladin kommt. Er klettert sogar aus Gruben.</p>' : ''}
+    ${next.paladin ? `<p class="bad"><b>Bossrunde:</b> ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Gruben. Danach wird das Feld geräumt.</p>` : ''}
     <div class="row"><button class="btn" id="mOk">Fallen bauen</button></div>`);
   $('mOk').onclick = () => { hideCard(); updateUI(); };
 }
