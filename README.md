@@ -8,7 +8,7 @@ Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per
 
 ## Grafik
 
-Echte Pixel-Art: Welt aus 16×16-Kacheln, alle Figuren und Fallen als handgesetzte Pixel-Sprites, ganzzahlig skaliert ohne Filter. Drei Welten mit eigener Farbwelt wechseln nach jedem Boss: Wiese, Höhle, Burg (mit Lava).
+Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschächte, schwebende Leuchtpunkte, dunkle Figuren mit hellen Masken, glühende Augen und Feuer. Oberfläche mit Cinzel und Cormorant Garamond, feinen Linien und Ornamenten. Drei Welten wechseln nach jedem Boss: Nebelwald, Kristallgrotte, Aschenburg (mit Lava).
 
 ## Bauteile
 
@@ -32,6 +32,7 @@ Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 
 - **Sterne:** Bestanden unter 10 % Durchbrüchen (Bronze), höchstens 5 % Silber, keiner Gold.
 - **Nicht bestanden:** Runde wiederholen, Gold aus Kills bleibt (in Wiederholungen halbiert).
+- **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (Gold und Bauten bleiben) oder weiter zur nächsten Runde.
 - **Budget:** Jede Runde 150 + 20 pro Runde. Restgold verfällt, Bauten bleiben.
 - **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und großem Budget.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
