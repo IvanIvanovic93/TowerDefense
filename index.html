@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.4', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-27.5', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -404,11 +404,12 @@ function moveBody(b, dx, dy, dyn) {
 // ================= Wellen =================
 const mulText = v => '×' + v.toFixed(1).replace('.', ',');
 // Leben, Schlagkraft und Heilung der Helden wachsen mit diesem Faktor
-function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 5) * .35 + Math.max(0, w - 10) * .6; }
+function waveHpMul(w) { return Math.pow(1.1, w - 1); }      // +10 % pro Runde, wie die Burg
+const waveSpd = w => 1 + Math.max(0, w - 10) * .02;          // ab Welt 3: +2 % Tempo pro Runde
 const waveSkill = w => .15 + Math.min(.45, (w - 1) * .05);
 const waveRng = w => 1 + Math.min(.35, (w - 1) * .04);
 // Heldenzahl wächst schnell: Gruben haben eine feste Kapazität und sollen irgendwann volllaufen
-function waveCount(w) { return Math.min(30 + w * 12 + Math.max(0, w - 5) * 8, 400); }
+function waveCount(w) { return Math.min(34 + w * 8 + Math.max(0, w - 5) * 12, 400); }
 // Nach jedem Boss kommt ein neuer Heldentyp dazu
 const TYPE_FROM = { rogue: 6, knight: 11, cleric: 16, mage: 21 };
 const newTypeAt = w => Object.keys(TYPE_FROM).find(t => TYPE_FROM[t] === w);
@@ -484,14 +485,14 @@ function spawnHero(type) {
   const d = HT[type];
   heroes.push({
     type, def: d, x: rnd(10, 26), y: GROUND * TS, vx: 0, vy: 0, w: d.w, h: d.h,
-    hp: d.hp * hpMul, max: d.hp * hpMul,
+    hp: d.hp * hpMul, max: d.hp * hpMul, spd: d.spd * waveSpd(S.wave),
     skill: Math.min(.95, d.skill + waveSkill(S.wave)), rng: d.rng * waveRng(S.wave), jv: d.jv,
     st: 'run', onGround: true, plans: {}, anim: Math.random() * 10, flash: 0, healT: rnd(1, 3),
     kb: 0, hitCd: 0, fbCd: 0, bestX: 0, stuckT: 0, wallTries: 0, waitT: 0, waiting: false, dead: false,
   });
 }
 const airTime = h => 2 * h.jv / G;
-function jump(h, dist) { h.vy = -h.jv; h.vx = Math.max(h.def.spd, dist / airTime(h)); h.onGround = false; }
+function jump(h, dist) { h.vy = -h.jv; h.vx = Math.max(h.spd, dist / airTime(h)); h.onGround = false; }
 
 function damage(h, amt, src) {
   if (h.dead) return;
@@ -618,7 +619,7 @@ function shouldWait(h) {
     if (h.plans[pk] === undefined) h.plans[pk] = Math.random() < h.skill;
     if (!h.plans[pk]) continue;
     if (h.waitT >= 2.2) h.plans['g' + pk] = true;
-    const win = (d + TS + 12) / h.def.spd;
+    const win = (d + TS + 12) / h.spd;
     let soon = false; for (let s = 0; s <= win; s += .05) if (flameOn(t, t.t + s)) { soon = true; break; }
     if (flameOn(t, t.t) || (!h.plans['g' + pk] && soon)) return true;
   }
@@ -682,9 +683,9 @@ function updHero(h, dt, dyn) {
     const tops = [colTop(cA), colTop(cB)].filter(v => v !== null);
     if (tops.length) { const ty = Math.min(...tops) - 3; h.vy = clamp((ty - h.y) * 4, -50, 50); } else h.vy = 0;
     h.waiting = shouldWait(h);
-    moveBody(h, h.waiting ? 0 : d.spd * dt, h.vy * dt, dyn);
+    moveBody(h, h.waiting ? 0 : h.spd * dt, h.vy * dt, dyn);
     if (h.hitWall && !h.waiting) { if (!attackWall(h, dt)) h.y -= 20 * dt; }
-    if (!h.waiting && !h.attacking) h.anim += d.spd * dt;
+    if (!h.waiting && !h.attacking) h.anim += h.spd * dt;
   } else {
     h.vy = Math.min(h.vy + G * dt, 420);
     if (h.kb > 0) { h.kb -= dt; moveBody(h, h.vx * dt, h.vy * dt, dyn); }
@@ -692,14 +693,14 @@ function updHero(h, dt, dyn) {
       h.waiting = shouldWait(h);
       h.waitT = h.waiting ? h.waitT + dt : 0;
       h.vx = 0;
-      if (!h.waiting && !planJump(h) && !dodge(h) && !fightMinion(h, dt)) h.vx = d.spd;
+      if (!h.waiting && !planJump(h) && !dodge(h) && !fightMinion(h, dt)) h.vx = h.spd;
       moveBody(h, h.vx * dt, h.vy * dt, dyn);
       if (h.hitWall && h.onGround) {
         // Mauer: drüberspringen, wenn sie niedrig genug ist, sonst kaputt schlagen
         const fr = feetRow(h), c = h.hitWall.c ?? Math.floor((h.x + h.w / 2 + 2) / TS);
         let hg = 0; while (hg < 5 && isSolid(c, fr - hg)) hg++;
         const apex = h.jv * h.jv / (2 * G);
-        if (!h.hitWall.dyn && apex >= hg * TS + 2 && h.wallTries < 2) { h.wallTries++; h.vy = -h.jv; h.vx = d.spd * 1.3; h.onGround = false; }
+        if (!h.hitWall.dyn && apex >= hg * TS + 2 && h.wallTries < 2) { h.wallTries++; h.vy = -h.jv; h.vx = h.spd * 1.3; h.onGround = false; }
         else attackWall(h, dt);
       }
       if (!h.attacking && h.vx) h.anim += h.vx * dt;
@@ -875,7 +876,7 @@ function updSchergen(dt) {
     if (schergeT[k] > 0) continue;
     let tg = null; for (const h of heroes) if (!h.dead && (!tg || h.x > tg.x)) tg = h;
     if (!tg) continue;
-    const o = schergePos(k), lead = tg.def.spd * (.35 + Math.abs(tg.x - o.x) / 500);
+    const o = schergePos(k), lead = tg.spd * (.35 + Math.abs(tg.x - o.x) / 500);
     launchStone(o, tg.x + lead, stoneDmg() * .6, true);
     schergeT[k] = 2.6; schergeAnim[k] = .3;
   }
