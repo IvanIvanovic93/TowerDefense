@@ -47,24 +47,15 @@ Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 
 ## Burg (Fortschritt über Durchgänge)
 
-Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, jeder geholte Stern wird zu einem Burgpunkt. Mit Burgpunkten baust du die Burg aus:
+Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, jeder geholte Stern wird zu einem Burgpunkt.
 
-| Stufe | Freischaltung |
-|---|---|
-| 1 | Block, Loch, Stacheln |
-| 2 | Kriecher |
-| 3 | Flammen |
-| 4 | Scherge (wirft automatisch Steine) |
-| 5 | Katapult |
-| 6 | Flatterer |
-| 7 | Feuerrad |
-| 8 | zweiter Scherge |
-| 9 | Stampfer |
-| 10 | Stachi |
-| 11 | Kanone |
-| 12 | dritter Scherge |
+Ausgebaut wird nur über den Burg-Knopf oben links neben dem Lord. Der Balken darunter zeigt, wie viele Burgpunkte bis zur nächsten Stufe fehlen. Im Spiel siehst du immer nur, was die nächste Stufe bringt, spätere Freischaltungen bleiben verborgen, gesperrte Bauteile tauchen in der Bauleiste gar nicht erst auf.
 
-Jede Stufe macht außerdem alle Fallen und Kreaturen 3 % stärker. Ausbau kostet 3 Punkte, danach je 2 mehr.
+- **Kosten:** 6, 10, 15, 21, 28, 36 … Burgpunkte pro Stufe, jede Stufe teurer als die vorige.
+- **Schaden:** Jede Stufe macht alle Fallen und Kreaturen 10 % stärker.
+- **Aussehen:** Die Burg wächst sichtbar mit: Strohhütte, Holzhaus, Palisade, Bergfried, Festung, Schloss, großes Schloss. Schergen stehen auf den Mauern.
+
+Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab den späteren Welten ohne Burgausbau nicht mehr weit.
 
 ## Helden
 
