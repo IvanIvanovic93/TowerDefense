@@ -11,103 +11,130 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Fallenfürst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <style>
+/* Pixel-UI: 8px-Raster, feste Palette (dieselbe wie im Spiel), Blockränder, harte Schatten, keine Verläufe */
 :root{
-  --bg:#140c1c;--panel:#221430;--panel2:#2e1c40;--line:#4a3160;
-  --text:#f3e9ff;--muted:#b8a5c9;--gold:#ffd24a;--red:#ff5a5a;--green:#6ee07a;--accent:#9b3dff;color-scheme:dark;
+  --ink:#0b0612;--night:#1d1226;--plum:#3a1d4a;--stone:#5b4a6e;--gray:#8d8193;--light:#d8d0e0;--white:#fff4e0;
+  --deep:#5a1f7a;--violet:#9b3dff;--lilac:#c38bff;--gold:#ffd24a;--orange:#ff8a1a;--red:#e83b3b;--dred:#8c1f2a;
+  --green:#6ee07a;--dgreen:#2f9a58;--ice:#7fe0ff;
+  --px:"Press Start 2P",ui-monospace,"Courier New",monospace;
+  color-scheme:dark;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;overscroll-behavior:none}
-button{font:inherit;color:inherit;cursor:pointer}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+html,body{height:100%;background:var(--ink);color:var(--white);font-family:var(--px);font-size:8px;line-height:16px;overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:none;font-smooth:never}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+.ico{display:inline-block;width:16px;height:16px;flex:none;background:center/16px 16px no-repeat;image-rendering:pixelated;vertical-align:-4px}
+/* Blockrahmen: schwarzer Außenrand, heller Innenrand, harter Schatten */
+.box{background:var(--night);border:2px solid var(--ink);box-shadow:inset 0 0 0 2px var(--light),4px 4px 0 var(--ink)}
+.btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:8px 16px;
+  background:var(--violet);color:var(--white);border:2px solid var(--ink);
+  box-shadow:inset -2px -2px 0 var(--deep),inset 2px 2px 0 var(--lilac),2px 2px 0 var(--ink);font-size:8px;line-height:16px}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:inset 2px 2px 0 var(--deep)}
+.btn:disabled{background:var(--stone);color:var(--gray);box-shadow:inset -2px -2px 0 var(--plum),inset 2px 2px 0 var(--gray)}
+.btn.pri{background:var(--gold);color:var(--ink)!important;box-shadow:inset -2px -2px 0 var(--orange),inset 2px 2px 0 var(--white),2px 2px 0 var(--ink)}
+.btn.pri:active{box-shadow:inset 2px 2px 0 var(--orange)}
+.btn.alt{background:var(--stone);box-shadow:inset -2px -2px 0 var(--plum),inset 2px 2px 0 var(--gray),2px 2px 0 var(--ink)}
+.btn.danger{background:var(--red);box-shadow:inset -2px -2px 0 var(--dred),inset 2px 2px 0 #ff9a8a,2px 2px 0 var(--ink)}
+.btn small{font-size:8px;line-height:8px;margin-top:4px;opacity:1}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
 #app{position:fixed;inset:0;display:flex;flex-direction:column;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-#top{height:40px;flex:none;display:flex;align-items:center;gap:6px;padding:0 8px;background:var(--panel);border-bottom:2px solid var(--line)}
-.stat{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px;background:rgba(0,0,0,.28);padding:4px 8px;border-radius:8px;white-space:nowrap}
+#top{height:40px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;background:var(--plum);border-bottom:2px solid var(--ink);box-shadow:inset 0 -2px 0 var(--stone);overflow:hidden}
+.stat{display:flex;align-items:center;gap:8px;height:24px;padding:0 8px;background:var(--ink);font-size:16px;line-height:16px;white-space:nowrap}
 .stat.g{color:var(--gold)}
-.stat small{font-weight:600;color:var(--muted);font-size:11px}
+.stat.r{color:var(--red)}
 .sp{flex:1}
-.lordb{width:auto!important;padding:0 7px;display:flex;align-items:center;gap:3px;position:relative}
-.lordb.pts::after{content:'';position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--panel)}
-.ib{width:34px;height:30px;border:none;border-radius:8px;background:var(--panel2);font-weight:800;font-size:14px;border:1px solid var(--line)}
-#stage{flex:1;position:relative;min-height:0;overflow:hidden}
-#game{position:absolute;inset:0;width:100%;height:100%;display:block}
-#bottom{height:80px;flex:none;background:var(--panel);border-top:2px solid var(--line);display:flex;align-items:stretch;gap:6px;padding:6px}
-#palette{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
+.ib{height:32px;min-width:32px;padding:0 8px;flex-direction:row;gap:8px;font-size:8px}
+.lordb{position:relative}
+.lordb.pts::after{content:'';position:absolute;top:-4px;right:-4px;width:8px;height:8px;background:var(--gold);box-shadow:0 0 0 2px var(--ink)}
+#stage{flex:1;position:relative;min-height:0;overflow:hidden;background:var(--ink)}
+#game{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
+#bottom{height:80px;flex:none;display:flex;align-items:stretch;gap:8px;padding:8px;background:var(--plum);border-top:2px solid var(--ink);box-shadow:inset 0 2px 0 var(--stone)}
+#palette{flex:1;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;padding:0 4px 4px 0}
 #palette *{touch-action:pan-x}
 #palette::-webkit-scrollbar{display:none}
-.tb{flex:none;width:66px;background:var(--panel2);border:2px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:10px;line-height:1.1}
-.tb canvas{width:34px;height:34px}
-.tb .c{color:var(--gold);font-weight:800;font-size:11px}
-.tb.sel{border-color:var(--gold);background:#3d2654}
-.tb.poor{opacity:.45}
-.btn{border:none;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;font-size:15px;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
-.btn small{font-weight:600;font-size:11px;opacity:.85}
-.btn.alt{background:var(--panel2);border:2px solid var(--line)}
-#bStart{min-width:118px}
-#waveinfo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 6px;font-size:13px;font-weight:700}
-.bar{height:10px;background:rgba(0,0,0,.35);border-radius:6px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c0392b,#ff8a3d)}
+.tb{flex:none;width:80px;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  background:var(--night);border:2px solid var(--ink);box-shadow:inset 0 0 0 2px var(--stone),2px 2px 0 var(--ink);font-size:8px;line-height:8px}
+.tb canvas{width:32px;height:32px;image-rendering:pixelated}
+.tb .c{color:var(--gold)}
+.tb.sel{background:var(--deep);box-shadow:inset 0 0 0 2px var(--gold),2px 2px 0 var(--ink)}
+.tb.poor{color:var(--gray)}
+.tb.poor .c{color:var(--red)}
+.tb.poor canvas{opacity:.5}
+#bStart{min-width:176px;font-size:16px;line-height:16px}
+#waveinfo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 8px}
+/* Balken aus Blöcken */
+.bar{height:16px;background:var(--ink);border:2px solid var(--ink);box-shadow:inset 0 0 0 2px var(--stone);padding:4px}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--orange) 0 6px,transparent 6px 8px)}
+.bar.xp i{background:repeating-linear-gradient(90deg,var(--lilac) 0 6px,transparent 6px 8px)}
 .hide{display:none!important}
-#popup{position:absolute;left:50%;top:28px;transform:translateX(-50%);width:min(360px,calc(100% - 16px));background:rgba(34,20,48,.96);border:2px solid var(--line);border-radius:12px;padding:8px 10px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
-#popup .ph{display:flex;align-items:center;gap:8px;font-size:15px}
-#popup .ph .lv{color:var(--gold);letter-spacing:1px}
-#popup .ph .x{margin-left:auto;background:none;border:none;font-size:18px;width:30px;height:28px}
-#popup .pd{color:var(--muted);margin:2px 0 4px;font-size:12px;line-height:1.3}
-#popup .ps{margin-bottom:6px}
+#popup{position:absolute;left:50%;top:32px;transform:translateX(-50%);width:min(400px,calc(100% - 16px));padding:16px;display:flex;flex-direction:column;gap:8px}
+#popup .ph{display:flex;align-items:center;gap:8px;font-size:16px;line-height:16px}
+#popup .ph .x{margin-left:auto;width:32px;height:32px;padding:0}
+#popup .pd{color:var(--gray)}
 #popup .pb{display:flex;gap:8px}
-#popup .pb button{flex:1;height:34px;border-radius:9px;border:none;font-weight:800;background:var(--accent);color:#fff}
-#popup .pb button.s{background:#5a2a36}
-#popup .pb button:disabled{opacity:.4}
-#toast{position:absolute;left:50%;top:30px;max-width:calc(100% - 16px);white-space:normal;text-align:center;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:6px 12px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
-#toast.on{opacity:1}
-#overlay{position:fixed;inset:0;background:rgba(10,5,16,.78);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
-.card{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px 18px;width:min(460px,100%);max-height:100%;overflow:auto;touch-action:pan-y}
+#popup .pb .btn{flex:1;flex-direction:row;gap:8px}
+#toast{position:absolute;left:50%;top:32px;transform:translateX(-50%);max-width:calc(100% - 16px);padding:8px 16px;text-align:center;
+  background:var(--ink);color:var(--white);border:2px solid var(--gold);box-shadow:4px 4px 0 var(--ink);display:none;pointer-events:none}
+#toast.on{display:block}
+/* Abdunkeln per Dithering (Schachbrett) statt Transparenz */
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;z-index:10;
+  background:repeating-conic-gradient(var(--ink) 0 25%,transparent 0 50%) 0 0/4px 4px}
+.card{width:min(512px,100%);max-height:100%;overflow:auto;touch-action:pan-y;padding:16px 24px;display:flex;flex-direction:column;gap:16px}
 .card *{touch-action:pan-y}
-.card h1{font-size:26px;letter-spacing:.5px;margin-bottom:2px}
-.card h1 span{color:var(--accent)}
-.card h2{font-size:20px;margin-bottom:6px}
-.card p{color:var(--muted);font-size:14px;line-height:1.4;margin:6px 0}
-.card ul{color:var(--muted);font-size:13px;line-height:1.45;margin:6px 0 6px 18px}
-.card .row{display:flex;gap:8px;margin-top:12px}
-.card .row .btn{flex:1;height:46px}
-.lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.lrow>div{flex:1}
-.lrow .muted,.muted{color:var(--muted);font-size:13px}
-.lup{width:46px;height:40px;font-size:22px;flex:none}
-.lup:disabled{opacity:.35}
-.bar.xp{margin:6px 0}
-.bar.xp i{background:linear-gradient(90deg,#6b2fb0,#c38bff)}
-.card details{margin-top:10px;color:var(--muted);font-size:14px}
-.card summary{cursor:pointer;font-weight:700;color:var(--text);padding:4px 0}
-.res{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;margin:8px 0}
+.card h1{font-size:24px;line-height:32px;color:var(--white);text-shadow:4px 4px 0 var(--deep)}
+.card h1 span{color:var(--lilac)}
+.card h2{font-size:16px;line-height:24px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+.card p{color:var(--light)}
+.card ul{color:var(--light);margin-left:16px;display:flex;flex-direction:column;gap:8px}
+.card ul li::marker{color:var(--gold);content:'> '}
+.card b{color:var(--white);font-weight:normal}
+.card .row{display:flex;gap:16px}
+.card .row .btn{flex:1;min-height:48px;font-size:16px;line-height:16px}
+.card details summary{cursor:pointer;color:var(--gold);list-style:none}
+.card details summary::before{content:'+ '}
+.card details[open] summary::before{content:'- '}
+.card details ul{margin-top:8px}
+.res{display:grid;grid-template-columns:1fr auto;gap:8px 16px;padding:8px;background:var(--ink)}
+.res span{color:var(--light)}
 .res b{text-align:right}
-.big{font-size:18px;font-weight:800;margin:6px 0}
-.stars i{font-style:normal;color:#4a3160;font-size:26px;letter-spacing:2px}.stars i.on{color:var(--gold)}
-.card p.legend{font-size:12px}
-.good{color:var(--green)}.bad{color:var(--red)}.gold{color:var(--gold)}
-#rotate{position:fixed;inset:0;z-index:20;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
-#rotate .ph{font-size:56px;animation:rot 2s ease-in-out infinite}
+.big{font-size:16px;line-height:24px;display:flex;align-items:center;gap:8px}
+.stars{display:inline-flex;gap:4px}
+.stars .ico{width:24px;height:24px;background-size:24px 24px}
+.lrow{display:flex;align-items:center;gap:16px;padding-top:16px;border-top:2px solid var(--stone)}
+.lrow>div{flex:1}
+.muted{color:var(--gray)!important}
+.lup{width:48px;height:40px;font-size:16px;flex:none;padding:0}
+.card p.legend{color:var(--gray)}
+.good{color:var(--green)!important}.bad{color:var(--red)!important}.gold{color:var(--gold)!important}
+#rotate{position:fixed;inset:0;z-index:20;background:var(--night);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;padding:24px;font-size:16px;line-height:24px}
+#rotate .ico{width:64px;height:64px;background-size:64px 64px;animation:rot 2s steps(4) infinite}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion:reduce){#rotate .ico{animation:none}}
 @media (orientation:portrait){body:not(.forceportrait) #rotate{display:flex}}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="top">
-    <div class="stat g">💰 <span id="gold">0</span></div>
-    <div class="stat">⚔️ <span id="wave">1</span></div>
-    <div class="stat">💀 <span id="kills">0</span></div>
-    <div class="stat">🏃 <span id="leaks">0</span> <small>durch</small></div>
+    <div class="stat g" title="Gold"><i class="ico i-coin"></i><span id="gold">0</span></div>
+    <div class="stat" title="Runde"><i class="ico i-sword"></i><span id="wave">1</span></div>
+    <div class="stat" title="Getötet"><i class="ico i-skull"></i><span id="kills">0</span></div>
+    <div class="stat r" title="Durchgekommen"><i class="ico i-run"></i><span id="leaks">0</span></div>
     <div class="sp"></div>
-    <button class="ib lordb" id="bLord">😈<span id="lordLv">1</span></button>
-    <button class="ib" id="bSpeed">1×</button>
-    <button class="ib" id="bPause">⏸</button>
-    <button class="ib" id="bMenu">☰</button>
+    <button class="btn ib lordb" id="bLord" aria-label="Dunkler Lord"><i class="ico i-lord"></i><span id="lordLv">1</span></button>
+    <button class="btn ib alt" id="bSpeed" aria-label="Tempo">1x</button>
+    <button class="btn ib alt" id="bPause" aria-label="Pause"><i class="ico i-pause"></i></button>
+    <button class="btn ib alt" id="bMenu" aria-label="Menü"><i class="ico i-menu"></i></button>
   </div>
   <div id="stage">
     <canvas id="game"></canvas>
     <div id="toast"></div>
-    <div id="popup" class="hide"></div>
+    <div id="popup" class="box hide"></div>
   </div>
   <div id="bottom">
     <div id="palette"></div>
@@ -115,14 +142,14 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div id="wiText"></div>
       <div class="bar"><i id="wiBar"></i></div>
     </div>
-    <button class="btn" id="bStart">▶ Runde 1<small>0 Helden</small></button>
+    <button class="btn pri" id="bStart">Runde 1<small>0 Helden</small></button>
   </div>
 </div>
-<div id="overlay"><div class="card" id="card"></div></div>
+<div id="overlay"><div class="card box" id="card"></div></div>
 <div id="rotate">
-  <div class="ph">📱</div>
-  <div style="font-weight:800;font-size:18px">Bitte Handy quer halten</div>
-  <button class="btn alt" style="height:40px" onclick="document.body.classList.add('forceportrait');window.dispatchEvent(new Event('resize'))">Trotzdem hochkant spielen</button>
+  <i class="ico i-phone"></i>
+  <div>Bitte Handy quer halten</div>
+  <button class="btn alt" onclick="document.body.classList.add('forceportrait');window.dispatchEvent(new Event('resize'))">Trotzdem hochkant spielen</button>
 </div>
 
 <script>
@@ -671,8 +698,72 @@ function update(dt) {
 
 // ================= Rendering =================
 const cv = document.getElementById('game');
-let c = cv.getContext('2d');
+const mainC = cv.getContext('2d');
+// Die Welt wird in niedriger Auflösung gezeichnet (1 Pixel = PIX Welt-Einheiten),
+// auf die feste Palette reduziert (mit Bayer-Dithering statt Verläufen) und pixelgenau hochskaliert.
+const PIX = 2;
+const off = document.createElement('canvas');
+const oc = off.getContext('2d', { willReadFrequently: true });
+let c = oc;
 let dpr = 1, cssW = 0, cssH = 0, scale = 1, viewW = 800;
+
+const PAL = ['#0b0612', '#1d1226', '#2b1b26', '#3a1d4a', '#4b3a57', '#5b4a6e', '#8d8193', '#d8d0e0', '#fff4e0',
+  '#5a1f7a', '#9b3dff', '#c38bff', '#5a3a20', '#8a5a2b', '#ff8a1a', '#ffd24a', '#e83b3b', '#8c1f2a',
+  '#3f7fe0', '#2f9a58', '#6ee07a', '#7fe0ff', '#f1c7a0', '#aab4c0'];
+const PAL_RGB = PAL.map(h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)));
+const LUT = new Uint8Array(32768);
+for (let q = 0; q < 32768; q++) {
+  const r = (q >> 10) * 8 + 4, g = ((q >> 5) & 31) * 8 + 4, b = (q & 31) * 8 + 4;
+  let best = 0, bd = 1e9;
+  PAL_RGB.forEach(([pr, pg, pb], k) => { const d = 3 * (r - pr) ** 2 + 4 * (g - pg) ** 2 + 2 * (b - pb) ** 2; if (d < bd) { bd = d; best = k; } });
+  LUT[q] = best;
+}
+const DITH = 30, BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v / 16 - .5) * DITH);
+function quantize(ctx, w, h) {
+  const img = ctx.getImageData(0, 0, w, h), d = img.data;
+  for (let y = 0, i = 0; y < h; y++) {
+    const row = (y & 3) * 4;
+    for (let x = 0; x < w; x++, i += 4) {
+      if (d[i + 3] < 128) { d[i + 3] = 0; continue; }
+      const e = PAL_RGB[LUT[(d[i] >> 3) << 10 | (d[i + 1] >> 3) << 5 | (d[i + 2] >> 3)]];
+      if (Math.abs(e[0] - d[i]) + Math.abs(e[1] - d[i + 1]) + Math.abs(e[2] - d[i + 2]) < 10) { d[i] = e[0]; d[i + 1] = e[1]; d[i + 2] = e[2]; d[i + 3] = 255; continue; }
+      const t = BAYER[row + (x & 3)];
+      const r = clamp(d[i] + t, 0, 255), g = clamp(d[i + 1] + t, 0, 255), b = clamp(d[i + 2] + t, 0, 255);
+      const p = PAL_RGB[LUT[(r >> 3) << 10 | (g >> 3) << 5 | (b >> 3)]];
+      d[i] = p[0]; d[i + 1] = p[1]; d[i + 2] = p[2]; d[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// 8x8-Pixel-Icons für die Oberfläche
+const SPR_COL = { k: '#0b0612', y: '#ffd24a', o: '#ff8a1a', w: '#fff4e0', l: '#d8d0e0', g: '#8d8193', s: '#5b4a6e', r: '#e83b3b', d: '#8c1f2a', b: '#3f7fe0', n: '#8a5a2b', v: '#9b3dff', p: '#c38bff', c: '#7fe0ff' };
+const SPRITES = {
+  coin:  ['..kkkk..', '.kyyyyk.', 'kyywyyok', 'kyywyyok', 'kyywyyok', 'kyyyyyok', '.kooook.', '..kkkk..'],
+  sword: ['......lw', '.....lwl', '....lwl.', 'k..lwl..', '.kkwl...', '..nk....', '.nkk....', 'nn..k...'],
+  skull: ['..llll..', '.llllll.', 'lkkllkkl', 'lkkllkkl', 'llllllll', '.llkkll.', '.lllll..', '..l.l.l.'],
+  run:   ['....rr..', '....rr..', '..rrrr..', '.r.rr.r.', '...rr...', '..r..r..', '.r....r.', 'r.......'],
+  lord:  ['r......r', 'rr....rr', '.rrrrrr.', '.ryrryr.', '.rrrrrr.', '.rkkkkr.', '..rrrr..', '........'],
+  pause: ['........', '.ww..ww.', '.ww..ww.', '.ww..ww.', '.ww..ww.', '.ww..ww.', '.ww..ww.', '........'],
+  play:  ['........', '.w......', '.www....', '.wwwww..', '.wwwwww.', '.wwwww..', '.www....', '.w......'],
+  menu:  ['........', '.wwwwww.', '........', '.wwwwww.', '........', '.wwwwww.', '........', '........'],
+  retry: ['..kkkk..', '.k....k.', 'k......k', 'k....kkk', 'k.....k.', '.k......', '..kkk...', '........'],
+  star:  ['...y....', '...y....', '..yyy...', 'yyyyyyy.', '.yyyyy..', '.yy.yy..', 'yy...yy.', '........'],
+  stard: ['...s....', '...s....', '..sss...', 'sssssss.', '.sssss..', '.ss.ss..', 'ss...ss.', '........'],
+  x:     ['........', '.w....w.', '..w..w..', '...ww...', '...ww...', '..w..w..', '.w....w.', '........'],
+  up:    ['...k....', '..kyk...', '.kyyyk..', 'kyyyyyk.', '..yyy...', '..yyy...', '..yyy...', '........'],
+  phone: ['.kkkkkk.', '.kcccck.', '.kcccck.', '.kcccck.', '.kcccck.', '.kcccck.', '.kkwwkk.', '.kkkkkk.'],
+};
+const icoCss = [];
+for (const [name, rows] of Object.entries(SPRITES)) {
+  const sc = document.createElement('canvas'); sc.width = sc.height = 8;
+  const sx = sc.getContext('2d');
+  rows.forEach((row, y) => [...row].forEach((ch, x) => { const col = SPR_COL[ch]; if (col) { sx.fillStyle = col; sx.fillRect(x, y, 1, 1); } }));
+  icoCss.push(`.i-${name}{background-image:url(${sc.toDataURL()})}`);
+}
+const icoStyle = document.createElement('style'); icoStyle.textContent = icoCss.join('\n'); document.head.append(icoStyle);
+const ico = n => `<i class="ico i-${n}"></i>`;
+const FONT = n => `${n}px "Press Start 2P", ui-monospace, monospace`;
 
 function resize() {
   const r = cv.parentElement.getBoundingClientRect();
@@ -681,6 +772,7 @@ function resize() {
   cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
   scale = cssH / H;
   viewW = cssW / scale;
+  off.width = Math.ceil(viewW / PIX) + 1; off.height = H / PIX;
   clampCam();
 }
 function clampCam() { camX = clamp(camX, 0, Math.max(0, WORLD_W - viewW)); }
@@ -781,7 +873,7 @@ function drawCastle() {
   c.beginPath(); c.moveTo(lx + 6, ly - 18 - bounce);
   if (lordThrow > 0) c.lineTo(lx + 2, ly - 44 - bounce); else c.lineTo(lx + 13, ly - 8 - bounce);
   c.stroke();
-  if (lordLaugh > 0) { c.fillStyle = '#ffd24a'; c.font = 'bold 12px system-ui'; c.textAlign = 'center'; c.fillText('Muhaha!', lx, ly - 50); }
+  if (lordLaugh > 0) { c.fillStyle = '#ffd24a'; c.font = FONT(16); c.textAlign = 'center'; c.fillText('Muhaha!', lx, ly - 50); }
 }
 
 // layer 0 = hinter den Helden, 1 = davor
@@ -981,11 +1073,12 @@ function drawHero(h) {
 }
 
 function draw() {
-  const k = dpr * scale;
-  const sx = shake > 0 ? rnd(-3, 3) * shake * 10 : 0, sy = shake > 0 ? rnd(-2, 2) * shake * 10 : 0;
-  c.setTransform(k, 0, 0, k, sx * dpr, sy * dpr);
+  c = oc;
+  const k = 1 / PIX;
+  const sx = shake > 0 ? Math.round(rnd(-3, 3) * shake * 6) : 0, sy = shake > 0 ? Math.round(rnd(-2, 2) * shake * 6) : 0;
+  c.setTransform(k, 0, 0, k, sx, sy);
   drawBg();
-  c.setTransform(k, 0, 0, k, -camX * k + sx * dpr, sy * dpr);
+  c.setTransform(k, 0, 0, k, -Math.round(camX * k) + sx, sy);
   const x0 = camX - 10, x1 = camX + viewW + 10;
   drawGround(x0, x1);
   drawPortal();
@@ -1029,23 +1122,29 @@ function draw() {
     if (p.ring) { c.strokeStyle = `rgba(150,255,150,${al})`; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y, 100 * (1 - al) + 10, 0, 7); c.stroke(); continue; }
     c.globalAlpha = al; c.fillStyle = p.col; c.fillRect(p.x, p.y, p.sz, p.sz); c.globalAlpha = 1;
   }
-  c.textAlign = 'center'; c.font = 'bold 13px system-ui';
-  for (const t of texts) { c.globalAlpha = clamp(t.life / t.max * 2, 0, 1); c.fillStyle = '#000'; c.fillText(t.txt, t.x + 1, t.y + 1); c.fillStyle = t.col; c.fillText(t.txt, t.x, t.y); }
+  c.textAlign = 'center'; c.font = FONT(16);
+  for (const t of texts) { c.globalAlpha = clamp(t.life / t.max * 2, 0, 1); c.fillStyle = '#0b0612'; c.fillText(t.txt, t.x + 2, t.y + 2); c.fillStyle = t.col; c.fillText(t.txt, t.x, t.y); }
   c.globalAlpha = 1;
 
   drawMinimap();
+  quantize(oc, off.width, off.height);
+  mainC.setTransform(1, 0, 0, 1, 0, 0);
+  mainC.imageSmoothingEnabled = false;
+  const f = scale * PIX * dpr;
+  mainC.drawImage(off, 0, 0, off.width * f, off.height * f);
 }
 
-const MM = { x: 8, y: 6, h: 14 };
+const MM = { x: 8, y: 6, h: 14 }; // in CSS-Pixeln
 function drawMinimap() {
-  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const bk = 1 / (scale * PIX); // CSS-Pixel -> Pufferpixel
+  c.setTransform(bk, 0, 0, bk, 0, 0);
   const w = cssW - 16, f = w / WORLD_W;
-  c.fillStyle = 'rgba(0,0,0,.5)'; rr(MM.x - 2, MM.y - 2, w + 4, MM.h + 4, 5); c.fill();
+  c.fillStyle = '#0b0612'; c.fillRect(MM.x - 3, MM.y - 3, w + 6, MM.h + 6);
   c.fillStyle = '#3a2a45'; c.fillRect(MM.x, MM.y + MM.h - 4, w, 4);
   c.fillStyle = '#5a2f7a'; c.fillRect(MM.x + CASTLE_L * f, MM.y, (WORLD_W - CASTLE_L) * f, MM.h);
   for (const tr of S.grid) if (tr) { c.fillStyle = TRAPS[tr.type].col; c.fillRect(MM.x + tr.i * TILE * f, MM.y + MM.h - 7, Math.max(2, TILE * f - 1), 6); }
   for (const h of heroes) { c.fillStyle = h.def.boss ? '#ffd24a' : '#bfe3ff'; c.fillRect(MM.x + h.x * f - 1, MM.y + 2, h.def.boss ? 4 : 2, h.def.boss ? 5 : 4); }
-  c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.strokeRect(MM.x + camX * f, MM.y - 1, viewW * f, MM.h + 2);
+  c.strokeStyle = '#fff4e0'; c.lineWidth = 2; c.strokeRect(MM.x + camX * f, MM.y - 1, viewW * f, MM.h + 2);
   if (phase === 'wave') { // Nachlade-Anzeige für den Steinwurf
     const cx = cssW - 28, cy = cssH - 28, r = stoneT > 0 ? 1 - stoneT / stoneCd() : 1;
     c.fillStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(cx, cy, 20, 0, 7); c.fill();
@@ -1058,7 +1157,7 @@ function drawMinimap() {
 function drawIcon(canvas, type) {
   const ic = canvas.getContext('2d'), sz = canvas.width;
   const box = { spikes: [-22, 8], pit: [-8, 60], wall: [-110, 6], frost: [-24, 8], spring: [-28, 8], flame: [-150, 6], crusher: [-190, 6], tower: [-128, 6] }[type];
-  const hgt = box[1] - box[0], k = Math.min(sz / 56, sz / hgt);
+  const hgt = box[1] - box[0], k = Math.min(sz / 60, sz / hgt);
   ic.clearRect(0, 0, sz, sz);
   const saveC = c; // drawTrap nutzt globales c -> kurz umbiegen
   const tr = makeTrap(type, -5, 1, 0, false);
@@ -1066,6 +1165,7 @@ function drawIcon(canvas, type) {
   ic.setTransform(k, 0, 0, k, sz / 2 - 24 * k, -box[0] * k - GY * k + (sz - hgt * k) / 2);
   ic.fillStyle = '#2b1b26'; ic.fillRect(-10, GY, 68, 70); ic.fillStyle = '#4b3a57'; ic.fillRect(-10, GY, 68, 4);
   swapCtx(ic); drawTrap(tr, 0, 0); drawTrap(tr, 0, 1); swapCtx(saveC);
+  ic.setTransform(1, 0, 0, 1, 0, 0); quantize(ic, sz, sz);
 }
 function swapCtx(x) { c = x; }
 
@@ -1075,7 +1175,7 @@ const palette = $('palette');
 ORDER.forEach(type => {
   const b = document.createElement('button');
   b.className = 'tb'; b.dataset.type = type;
-  const icv = document.createElement('canvas'); icv.width = icv.height = 68;
+  const icv = document.createElement('canvas'); icv.width = icv.height = 32;
   b.append(icv);
   const n = document.createElement('div'); n.textContent = TRAPS[type].name; b.append(n);
   const co = document.createElement('div'); co.className = 'c'; co.textContent = TRAPS[type].cost; b.append(co);
@@ -1115,7 +1215,7 @@ function updateUI() {
   $('bStart').classList.toggle('hide', !build);
   if (build) {
     const l = planned(S.wave);
-    $('bStart').innerHTML = `${S.retry ? '↻' : '▶'} Runde ${S.wave}<small>${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}</small>`;
+    $('bStart').innerHTML = `<span>Runde ${S.wave}</span><small>${S.retry ? 'Nochmal · ' : ''}${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}</small>`;
     refreshPalette();
   } else {
     const left = heroes.length + spawnQ.length;
@@ -1124,8 +1224,8 @@ function updateUI() {
   }
   $('lordLv').textContent = lordLevel();
   $('bLord').classList.toggle('pts', lordFree() > 0);
-  $('bSpeed').textContent = speed + '×';
-  $('bPause').textContent = paused ? '▶' : '⏸';
+  $('bSpeed').textContent = speed + 'x';
+  $('bPause').innerHTML = ico(paused ? 'play' : 'pause');
 }
 
 let toastT = 0;
@@ -1155,12 +1255,12 @@ function openPopup(i) {
   const tr = S.grid[i], d = TRAPS[tr.type], p = $('popup');
   const build = phase === 'build';
   const canUp = tr.lvl < 3;
-  p.innerHTML = `<div class="ph"><b>${d.name}</b><span class="lv">${'★'.repeat(tr.lvl)}${'☆'.repeat(3 - tr.lvl)}</span><button class="x" id="pX">✕</button></div>
+  p.innerHTML = `<div class="ph"><b>${d.name}</b><span class="stars">${ico('star').repeat(tr.lvl)}${ico('stard').repeat(3 - tr.lvl)}</span><button class="btn alt x" id="pX" aria-label="Schließen">${ico('x')}</button></div>
     <div class="pd">${d.desc}</div>
     <div class="ps">${statText(tr.type, tr.lvl)}${canUp ? `<br><span class="gold">Nächste Stufe:</span> ${statText(tr.type, tr.lvl + 1)}` : ''}</div>
-    <div class="pb">${canUp ? `<button id="pUp" ${!build || S.gold < upCost(tr) ? 'disabled' : ''}>⬆ ${upCost(tr)} 💰</button>` : '<button disabled>Max. Stufe</button>'}
-    <button class="s" id="pSell" ${!build ? 'disabled' : ''}>Verkaufen +${sellVal(tr)}</button></div>
-    ${build ? '' : '<div class="pd" style="margin-top:4px">Bauen nur zwischen den Runden.</div>'}`;
+    <div class="pb">${canUp ? `<button class="btn pri" id="pUp" ${!build || S.gold < upCost(tr) ? 'disabled' : ''}>${ico('up')} ${upCost(tr)} ${ico('coin')}</button>` : '<button class="btn" disabled>Max. Stufe</button>'}
+    <button class="btn danger" id="pSell" ${!build ? 'disabled' : ''}>Verkaufen +${sellVal(tr)}</button></div>
+    ${build ? '' : '<div class="pd">Bauen nur zwischen den Runden.</div>'}`;
   p.classList.remove('hide');
   $('pX').onclick = closePopup;
   const up = $('pUp');
@@ -1244,7 +1344,7 @@ const HELP = `<ul>
   <li>Du bist der <b>Dunkle Lord</b>. Helden rennen vom Portal (links) zu deinem Schloss (rechts).</li>
   <li>Zwischen den Runden: unten eine Falle wählen, dann auf den Weg tippen. Falle antippen = Upgrade / Verkaufen.</li>
   <li>Wischen verschiebt die Kamera, die Leiste oben zeigt die ganze Strecke.</li>
-  <li>Während einer Runde: tippe auf die Strecke, dann wirft der Lord einen Stein. Über 😈 levelst du ihn auf, sein Fortschritt bleibt dauerhaft.</li>
+  <li>Während einer Runde: tippe auf die Strecke, dann wirft der Lord einen Stein. Über den Lord-Knopf oben levelst du ihn auf, sein Fortschritt bleibt dauerhaft.</li>
   <li>Bestanden ist eine Runde, wenn <b>unter 10 %</b> der Helden durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.</li>
   <li>Jede Runde gibt ein festes Budget. Restgold verfällt beim Weiterkommen, die Fallen bleiben stehen.</li>
   <li>Jede 5. Runde kommt ein Paladin als Boss. Danach wird das Feld geräumt und du startest mit großem Budget neu.</li>
@@ -1258,7 +1358,7 @@ function showStart() {
   showCard(`<h1>Fallen<span>fürst</span></h1>
     <p>Dutzende Helden stürmen auf dein Schloss zu. Stell Fallen auf, damit keiner durchkommt.</p>
     <div class="row">
-      ${saved && (saved.wave > 1 || saved.grid.some(Boolean)) ? `<button class="btn" id="mCont">Weiter<small>Runde ${saved.wave}</small></button><button class="btn alt" id="mNew">Neues Spiel</button>` : `<button class="btn" id="mNew">Spielen</button>`}
+      ${saved && (saved.wave > 1 || saved.grid.some(Boolean)) ? `<button class="btn pri" id="mCont">Weiter<small>Runde ${saved.wave}</small></button><button class="btn alt" id="mNew">Neues Spiel</button>` : `<button class="btn pri" id="mNew">Spielen</button>`}
     </div>
     <details><summary>So wird gespielt</summary>${HELP}</details>`);
   const cont = $('mCont');
@@ -1288,14 +1388,14 @@ function showLord(resume) {
   const lv = lordLevel(), cur = lordXpFor(lv), nxt = lordXpFor(lv + 1), free = lordFree();
   const rows = Object.entries(LORD_SKILLS).map(([k, sk]) => {
     const l = lord.pts[k], max = l >= LORD_MAX;
-    return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` → <span class="gold">${sk.txt(l + 1)}</span>`}</span></div>
+    return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` > <span class="gold">${sk.txt(l + 1)}</span>`}</span></div>
       <button class="btn lup" data-k="${k}" ${!free || max ? 'disabled' : ''}>+</button></div>`;
   }).join('');
-  showCard(`<h2>Dunkler Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:15px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>
+  showCard(`<h2>Dunkler Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:8px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>
     <div class="bar xp"><i style="width:${Math.min(100, (lord.xp - cur) / (nxt - cur) * 100)}%"></i></div>
     <p class="muted">${lord.xp - cur} / ${nxt - cur} Erfahrung bis Stufe ${lv + 1} (1 pro Held, 10 pro Paladin). In der Runde auf die Strecke tippen = Steinwurf. Der Lord behält alles, auch bei einem neuen Spiel.</p>
     ${rows}
-    <div class="row"><button class="btn" id="mBack">Zurück</button></div>`);
+    <div class="row"><button class="btn pri" id="mBack">Zurück</button></div>`);
   document.querySelectorAll('.lup').forEach(b => b.onclick = () => {
     if (lordFree() <= 0 || lord.pts[b.dataset.k] >= LORD_MAX) return;
     lord.pts[b.dataset.k]++; saveLord(); showLord(wasPaused); updateUI();
@@ -1307,19 +1407,19 @@ function showMenu() {
   const wasPaused = paused; paused = true;
   showCard(`<h2>Pause</h2>
     <div class="res"><span>Runde</span><b>${S.wave}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Sterne</span><b>${Object.values(S.stars).reduce((a, b) => a + b, 0)} / ${(S.wave - 1) * 3}</b></div>
-    <div class="row"><button class="btn" id="mRes">Weiter</button><button class="btn alt" id="mNew">Neues Spiel</button></div>
+    <div class="row"><button class="btn pri" id="mRes">Weiter</button><button class="btn alt" id="mNew">Neues Spiel</button></div>
     <details><summary>So wird gespielt</summary>${HELP}</details>`);
   $('mRes').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
   // Zweistufige Bestätigung im Spiel statt confirm()
   $('mNew').onclick = e => {
     const b = e.currentTarget;
-    if (!b.dataset.armed) { b.dataset.armed = '1'; b.innerHTML = 'Wirklich?<small>Fortschritt geht verloren</small>'; b.style.background = '#8a2a3a'; return; }
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.innerHTML = 'Wirklich?<small>Fortschritt weg</small>'; b.classList.add('danger'); return; }
     paused = false; S = newState(); save(); begin();
   };
 }
 
 const STAR_NAMES = ['', 'Bronze', 'Silber', 'Gold'];
-function starRow(n) { return `<span class="stars">${'<i class="on">★</i>'.repeat(n)}${'<i>★</i>'.repeat(3 - n)}</span>`; }
+function starRow(n) { return `<span class="stars">${ico('star').repeat(n)}${ico('stard').repeat(3 - n)}</span>`; }
 function showResult(w, stars) {
   const passed = stars > 0;
   const next = heroMix(S.wave);
@@ -1327,7 +1427,7 @@ function showResult(w, stars) {
   const newTypes = passed && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
   const pct = Math.round(W.leaks / waveTotal * 100);
   showCard(`<h2>Runde ${w} ${passed ? 'bestanden' : 'nicht bestanden'}</h2>
-    <div class="big ${passed ? 'good' : 'bad'}">${starRow(stars)} ${passed ? STAR_NAMES[stars] : ''}</div>
+    <div class="big ${passed ? '' : 'bad'}" style="color:${['', 'var(--orange)', 'var(--light)', 'var(--gold)'][stars]}">${starRow(stars)} ${passed ? STAR_NAMES[stars] : ''}</div>
     <div class="res">
       <span>Durchgekommen</span><b class="${W.leaks ? 'bad' : 'good'}">${W.leaks} von ${waveTotal} (${pct} %)</b>
       <span>Getötet</span><b>${W.kills}</b>
@@ -1340,8 +1440,8 @@ function showResult(w, stars) {
     <p><b>${passed ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
     ${newTypes ? `<p class="gold">Neu: ${HT[newTypes].name} - ${{ rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen! Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' }[newTypes]}</p>` : ''}
     ${next.paladin ? `<p class="bad"><b>Bossrunde:</b> ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Gruben. Danach wird das Feld geräumt.</p>` : ''}
-    ${lordFree() ? `<p class="gold"><b>Dunkler Lord Stufe ${lordLevel()}:</b> ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei (😈 oben).</p>` : ''}
-    <div class="row"><button class="btn" id="mOk">Fallen bauen</button></div>`);
+    ${lordFree() ? `<p class="gold"><b>Dunkler Lord Stufe ${lordLevel()}:</b> ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei (Lord-Knopf oben).</p>` : ''}
+    <div class="row"><button class="btn pri" id="mOk">Fallen bauen</button></div>`);
   $('mOk').onclick = () => { hideCard(); updateUI(); };
 }
 

@@ -18,7 +18,7 @@ Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin 
 
 ## Spielen
 
-Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder das Repo per GitHub Pages hosten (Settings → Pages → Branch wählen). Am Handy: Seite öffnen → "Zum Startbildschirm hinzufügen" startet das Spiel im Vollbild-Querformat.
+Reines HTML5/Canvas ohne Build-Schritt, im Pixel-Art-Stil: Die Welt wird in halber Auflösung gerendert, auf eine feste 24-Farben-Palette reduziert (Verläufe werden zu Bayer-Dithering) und pixelgenau hochskaliert. UI mit "Press Start 2P", 8px-Raster, Blockrändern und harten Schatten. `index.html` im Browser öffnen oder das Repo per GitHub Pages hosten (Settings → Pages → Branch wählen). Am Handy: Seite öffnen → "Zum Startbildschirm hinzufügen" startet das Spiel im Vollbild-Querformat.
 
 ## Fallen
 
