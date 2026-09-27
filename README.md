@@ -14,11 +14,11 @@
 
 ## Dunkler Lord
 
-Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen auf den Boden unter der Tippstelle. Eine blinkende Markierung zeigt den Einschlag, trifft der Stein unterwegs einen Helden, schlägt er dort ein (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt dauerhaft erhalten, auch bei einem neuen Spiel.
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen auf den Boden unter der Tippstelle. Eine blinkende Markierung zeigt den Einschlag, trifft der Stein unterwegs einen Helden, schlägt er dort ein (Flächenschaden, mit Nachladezeit). Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Lord-Stufe gibt einen Punkt für Wurfkraft, Nachladen oder Einschlag-Radius (je bis 10). Der Lord-Fortschritt bleibt über alle Runden erhalten und wird erst bei einem neuen Spiel zurückgesetzt.
 
 ## Spielen
 
-Reines HTML5/Canvas ohne Build-Schritt, im Pixel-Art-Stil: Die Welt wird in halber Auflösung gerendert, auf eine feste, helle 26-Farben-Palette reduziert (Tag mit Wolken, Hügeln und Büschen) (Verläufe werden zu Bayer-Dithering) und pixelgenau hochskaliert. UI mit "Press Start 2P", 8px-Raster, Blockrändern und harten Schatten. `index.html` im Browser öffnen oder das Repo per GitHub Pages hosten (Settings → Pages → Branch wählen). Am Handy: Seite öffnen → "Zum Startbildschirm hinzufügen" startet das Spiel im Vollbild-Querformat.
+Reines HTML5/Canvas ohne Build-Schritt, im Pixel-Art-Stil: Die Welt wird in halber Auflösung gerendert, auf eine feste 24-Farben-Palette reduziert (Verläufe werden zu Bayer-Dithering) und pixelgenau hochskaliert. UI mit "Press Start 2P", 8px-Raster, Blockrändern und harten Schatten. `index.html` im Browser öffnen oder das Repo per GitHub Pages hosten (Settings → Pages → Branch wählen). Am Handy: Seite öffnen → "Zum Startbildschirm hinzufügen" startet das Spiel im Vollbild-Querformat.
 
 ## Fallen
 
