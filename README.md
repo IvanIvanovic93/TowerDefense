@@ -6,6 +6,10 @@ Ein Level-Baukasten für das Handy, in dem du der Bösewicht bist. Dutzende Held
 
 Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per GitHub Pages hosten. Am Handy: "Zum Startbildschirm hinzufügen" startet es im Vollbild-Querformat.
 
+## Spielstand
+
+"Neues Spiel" setzt alles auf null, auch die Burg (mit Bestätigung). "Burg zurücksetzen" im Spiel startet nur den Durchgang neu und behält die Burgstufe. Mit jeder veröffentlichten Version (`DATA_VERSION` in `index.html`) werden alle Spielstände gelöscht, nur Einführung und Sortierung bleiben.
+
 ## Erster Start
 
 Beim ersten Spiel führt eine kurze Einführung direkt im Spiel durch die ersten Schritte: Loch wählen, auf den markierten Boden tippen, Runde starten, Steine werfen. Sie lässt sich jederzeit überspringen und erscheint nur einmal. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
@@ -63,7 +67,7 @@ Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab
 
 ## Helden
 
-Knappe, Schurke (springt weit und hoch), Ritter (gepanzert, springt kaum), Klerikerin (heilt), Magier (schwebt über Lücken und Bodenfallen), Paladin (Boss, klettert aus Löchern). Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit demselben Faktor: `1 + 0,3·(R−1) + 0,35·max(0, R−5) + 0,6·max(0, R−10)` (Runde 5: ×2,2, Runde 10: ×5,45, Runde 15: ×11,7). Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten. Wer von einem Gegner getroffen wird, lernt daraus.
+Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Anzahl, Sprungweite und Klugheit der Helden. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit demselben Faktor: `1 + 0,3·(R−1) + 0,35·max(0, R−5) + 0,6·max(0, R−10)` (Runde 5: ×2,2, Runde 10: ×5,45, Runde 15: ×11,7). Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten. Wer von einem Gegner getroffen wird, lernt daraus.
 
 ## Dunkler Lord
 

@@ -250,6 +250,15 @@ const HT = {
 
 // ================= Burg (bleibt über alle Durchgänge) =================
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
+// Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
+// (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
+const DATA_VERSION = '2026-09-27.1', VERSION_KEY = 'fallenfuerst_version';
+try {
+  if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
+    ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(VERSION_KEY, DATA_VERSION);
+  }
+} catch (e) {}
 const META_KEY = 'fallenfuerst_burg_v1';
 const UNLOCKS = [
   { lvl: 1, tools: ['block', 'hole', 'spikes'] },
@@ -387,16 +396,20 @@ function moveBody(b, dx, dy, dyn) {
 const mulText = v => '×' + v.toFixed(1).replace('.', ',');
 // Leben, Schlagkraft und Heilung der Helden wachsen mit diesem Faktor
 function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 5) * .35 + Math.max(0, w - 10) * .6; }
-const waveSkill = w => .15 + Math.min(.35, (w - 1) * .03);
-const waveRng = w => 1 + Math.min(.3, (w - 1) * .025);
-function waveCount(w) { return Math.min(32 + w * 6, 150); }
+const waveSkill = w => .15 + Math.min(.45, (w - 1) * .05);
+const waveRng = w => 1 + Math.min(.35, (w - 1) * .04);
+function waveCount(w) { return Math.min(32 + w * 7, 160); }
+// Nach jedem Boss kommt ein neuer Heldentyp dazu
+const TYPE_FROM = { rogue: 6, knight: 11, cleric: 16, mage: 21 };
+const newTypeAt = w => Object.keys(TYPE_FROM).find(t => TYPE_FROM[t] === w);
 const isBoss = w => w % 5 === 0;
 function waveList(w) {
   const pool = [['squire', 10]];
-  if (w >= 2) pool.push(['rogue', 3 + w * .5]);
-  if (w >= 3) pool.push(['knight', 2 + w * .4]);
-  if (w >= 4) pool.push(['cleric', 1.5 + w * .2]);
-  if (w >= 5) pool.push(['mage', 1 + w * .6]);
+  const since = t => w - TYPE_FROM[t];
+  if (since('rogue') >= 0) pool.push(['rogue', 3 + since('rogue') * .6]);
+  if (since('knight') >= 0) pool.push(['knight', 2 + since('knight') * .5]);
+  if (since('cleric') >= 0) pool.push(['cleric', 1.5 + since('cleric') * .3]);
+  if (since('mage') >= 0) pool.push(['mage', 2 + since('mage') * .6]);
   const tot = pool.reduce((a, p) => a + p[1], 0), list = [];
   for (let n = waveCount(w); n > 0; n--) {
     let r = Math.random() * tot, pick = 'squire';
@@ -1658,16 +1671,22 @@ const HELP = `<ul>
   <li>Du startest mit Block, Loch und Stacheln. Kommst du nicht weiter, setzt du die Burg zurück: jeder Stern des Durchgangs wird zum Burgpunkt. Damit baust du die Burg aus und schaltest neue Fallen, Kreaturen und Schergen frei.</li>
 </ul>`;
 function showStart() {
-  const saved = load();
+  const saved = load(), hasRun = (!!saved && (saved.wave > 1 || saved.things.length > 0)) || META.lvl > 1 || META.pts > 0 || META.runs > 0;
   showCard(`<div class="hrow"><h1>Fallen<span>fürst</span></h1>${infoBtn('mInfo')}</div>
     <p class="lede">Du bist der Dunkle Lord. Baue die Strecke, an der eine ganze Horde Helden scheitert, bevor sie dein Schloss erreicht.</p>
     <div class="row">
-      ${saved && (saved.wave > 1 || saved.things.length) ? `<button class="btn pri" id="mCont">Weiter<small>Runde ${saved.wave}</small></button><button class="btn alt" id="mNew">Neues Spiel</button>` : `<button class="btn pri" id="mNew">Spielen</button>`}
+      ${hasRun ? `<button class="btn pri" id="mCont">Weiter<small>Runde ${saved ? saved.wave : 1} · Burgstufe ${META.lvl}</small></button><button class="btn alt" id="mNew">Neues Spiel<small>alles auf null</small></button>` : `<button class="btn pri" id="mNew">Spielen</button>`}
     </div>`);
   $('mInfo').onclick = () => showInfo('So wird gespielt', HELP, showStart);
   const cont = $('mCont');
-  if (cont) cont.onclick = () => { S = saved; hideCard(); tryFullscreen(); showMap(S.wave, S.wave, begin); };
-  $('mNew').onclick = () => { S = newState(); save(); resetLord(); hideCard(); tryFullscreen(); showMap(1, 1, begin); };
+  if (cont) cont.onclick = () => { S = saved || newState(); hideCard(); tryFullscreen(); showMap(S.wave, S.wave, begin); };
+  // Neues Spiel: alles auf null, auch die Burg. Mit Fortschritt erst nach Bestätigung.
+  $('mNew').onclick = e => {
+    const b = e.currentTarget;
+    if (hasRun && !b.dataset.armed) { b.dataset.armed = '1'; b.innerHTML = 'Wirklich neu?<small>Burg und Fortschritt weg</small>'; b.classList.add('danger'); return; }
+    META = { pts: 0, lvl: 1, runs: 0 }; saveMeta(); renderPalette(); refreshPalette();
+    S = newState(); save(); resetLord(); hideCard(); tryFullscreen(); showMap(1, 1, begin);
+  };
 }
 function begin() {
   applyLength(S.wave); rebuildTM();
@@ -1761,7 +1780,7 @@ function showResult(w, stars) {
   const passed = stars > 0, choice = stars === 1 || stars === 2, advanced = stars === 3;
   const nextW = choice ? w + 1 : S.wave, next = heroMix(advanced ? S.wave : w);
   const names = Object.entries(next).map(([t, n]) => `${n}× ${HT[t].name}`).join(', ');
-  const newTypes = advanced && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
+  const newTypes = advanced && newTypeAt(S.wave);
   const pct = Math.round(W.leaks / waveTotal * 100);
   const newWorld = passed && isBoss(w);
   showCard(`<div class="hrow"><h2>Runde ${w} ${passed ? 'bestanden' : 'nicht bestanden'}</h2>${infoBtn('mInfo')}</div>
@@ -1973,7 +1992,8 @@ function showMap(from, to, go, goLabel) {
   mapBanner = null; mapFree = false; mapCam = mapCamFor(mapY(from));
   const pos = (to - 1) % 5 + 1;
   $('mapTitle').textContent = `${themeFor(to).name} · Runde ${to}`;
-  $('mapSub').textContent = isBoss(to) ? `Welt ${Math.floor((to - 1) / 5) + 1} · Bossburg` : `Welt ${Math.floor((to - 1) / 5) + 1} · Feld ${pos} von 5`;
+  const nt = newTypeAt(to);
+  $('mapSub').textContent = (isBoss(to) ? `Welt ${Math.floor((to - 1) / 5) + 1} · Bossburg` : `Welt ${Math.floor((to - 1) / 5) + 1} · Feld ${pos} von 5`) + (nt ? ` · Neu: ${HT[nt].name}` : '');
   const b = $('mapGo');
   b.innerHTML = goLabel || `Runde ${to} bauen<small>${S.gold} Gold</small>`;
   b.onclick = () => { closeMap(); go(); };
