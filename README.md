@@ -24,7 +24,11 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 | Katapult | Schleudert Helden zurück |
 | Kriecher | Kleiner Gegner, läuft hin und her, kann plattgesprungen werden |
 | Flatterer | Fliegt auf und ab |
-| Stachi | Stacheliger Gegner, draufspringen verletzt |
+| Stachi | Stacheliger Gegner mit viel Leben, draufspringen verletzt |
+
+Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Beispiel im Tunnel), kämpfen sich durch.
+
+Die Bauleiste lässt sich nach Art (Gelände, Fallen, Kreaturen) oder nach Kosten sortieren.
 
 Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 

@@ -57,6 +57,10 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 #stage{flex:1;position:relative;min-height:0;overflow:hidden;background:var(--bg)}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block}
 #bottom{height:84px;flex:none;display:flex;align-items:stretch;gap:10px;padding:8px 10px;border-top:1px solid var(--line)}
+#psort{flex:none;display:flex;flex-direction:column;gap:6px;width:66px}
+#psort .btn{flex:1;padding:0 4px;font-size:10px;letter-spacing:.1em;color:var(--muted)}
+#psort .btn.on{color:var(--gold);border-color:rgba(232,201,138,.6)}
+.pdiv{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);align-self:center;font-family:var(--display);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:0 2px;border-left:1px solid var(--line)}
 #palette{flex:1;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
 #palette *{touch-action:pan-x}
 #palette::-webkit-scrollbar{display:none}
@@ -142,6 +146,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
     <div id="popup" class="box hide"></div>
   </div>
   <div id="bottom">
+    <div id="psort"><button class="btn" data-m="art">Art</button><button class="btn" data-m="cost">Kosten</button></div>
     <div id="palette"></div>
     <div id="waveinfo" class="hide">
       <div id="wiText"></div>
@@ -177,17 +182,17 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 // ================= Bauteile =================
 // place: 'air' = freies Feld über dem Boden, 'floor' = freies Feld mit festem Grund darunter, 'ground' = Bodenfeld
 const TOOLS = {
-  block:   { name: 'Block', cost: 15, place: 'air', col: '#c0703a', desc: 'Fester Block für Mauern, Treppen und Plattformen. Helden springen drüber oder schlagen ihn kaputt. Wird jede Runde repariert.', lv: [{ hp: 60 }, { hp: 150 }, { hp: 320 }] },
-  hole:    { name: 'Loch', cost: 40, place: 'ground', col: '#000000', desc: 'Reißt den Boden auf. Wer reinfällt, ist weg. Gefallene Helden füllen das Loch nach und nach auf.', lv: [{ cap: 3 }, { cap: 5 }, { cap: 8 }] },
-  spikes:  { name: 'Stacheln', cost: 30, place: 'floor', col: '#c9c9d9', desc: 'Schaden, solange ein Held drauf steht. Clevere Helden springen drüber.', lv: [{ dps: 40 }, { dps: 65 }, { dps: 100 }] },
-  flame:   { name: 'Flammen', cost: 70, place: 'floor', col: '#ff9a2e', desc: 'Feuersäule im Takt, drei Felder hoch. Trifft auch Springer.', lv: [{ dps: 70 }, { dps: 110 }, { dps: 160 }] },
-  firebar: { name: 'Feuerrad', cost: 90, place: 'air', col: '#ffd83a', desc: 'Kreisende Feuerkugeln, frei in der Luft platzierbar.', lv: [{ n: 3, dmg: 22, spd: 1.8 }, { n: 4, dmg: 34, spd: 2.1 }, { n: 5, dmg: 50, spd: 2.4 }] },
-  thwomp:  { name: 'Stampfer', cost: 100, place: 'air', col: '#7c7c94', desc: 'Kracht herunter, sobald ein Held darunter ist. Unten blockiert er den Weg.', lv: [{ dmg: 120 }, { dmg: 190 }, { dmg: 280 }] },
-  cannon:  { name: 'Kanone', cost: 80, place: 'air', col: '#45455a', desc: 'Schießt im Takt Kugeln nach links. Zählt auch als Block.', lv: [{ dmg: 30, per: 3 }, { dmg: 48, per: 2.4 }, { dmg: 72, per: 1.8 }] },
-  spring:  { name: 'Katapult', cost: 60, place: 'floor', col: '#e03a3a', desc: 'Schleudert Helden zurück durch deine Fallen.', lv: [{ push: 4, cd: 2.2 }, { push: 5.5, cd: 1.6 }, { push: 7, cd: 1.1 }] },
-  crawler: { name: 'Kriecher', cost: 25, place: 'floor', minion: true, col: '#9b4dff', desc: 'Kleiner Gegner, läuft hin und her. Helden können ihn plattspringen.', lv: [{ dmg: 18, spd: 14 }, { dmg: 30, spd: 18 }, { dmg: 45, spd: 22 }] },
-  bat:     { name: 'Flatterer', cost: 40, place: 'air', minion: true, col: '#5a2596', desc: 'Fliegt auf und ab und trifft auch Springer. Kann plattgesprungen werden.', lv: [{ dmg: 20, rng: 20 }, { dmg: 32, rng: 28 }, { dmg: 48, rng: 36 }] },
-  spiky:   { name: 'Stachi', cost: 45, place: 'floor', minion: true, col: '#8e1f2c', desc: 'Stacheliger Gegner. Wer draufspringt, verletzt sich selbst.', lv: [{ dmg: 28, spd: 10 }, { dmg: 44, spd: 13 }, { dmg: 66, spd: 16 }] },
+  block:   { name: 'Block', cat: 'Gelände', cost: 15, place: 'air', col: '#c0703a', desc: 'Fester Block für Mauern, Treppen und Plattformen. Helden springen drüber oder schlagen ihn kaputt. Wird jede Runde repariert.', lv: [{ hp: 60 }, { hp: 150 }, { hp: 320 }] },
+  hole:    { name: 'Loch', cat: 'Gelände', cost: 40, place: 'ground', col: '#000000', desc: 'Reißt den Boden auf. Wer reinfällt, ist weg. Gefallene Helden füllen das Loch nach und nach auf.', lv: [{ cap: 3 }, { cap: 5 }, { cap: 8 }] },
+  spikes:  { name: 'Stacheln', cat: 'Fallen', cost: 30, place: 'floor', col: '#c9c9d9', desc: 'Schaden, solange ein Held drauf steht. Clevere Helden springen drüber.', lv: [{ dps: 40 }, { dps: 65 }, { dps: 100 }] },
+  flame:   { name: 'Flammen', cat: 'Fallen', cost: 70, place: 'floor', col: '#ff9a2e', desc: 'Feuersäule im Takt, drei Felder hoch. Trifft auch Springer.', lv: [{ dps: 70 }, { dps: 110 }, { dps: 160 }] },
+  firebar: { name: 'Feuerrad', cat: 'Fallen', cost: 90, place: 'air', col: '#ffd83a', desc: 'Kreisende Feuerkugeln, frei in der Luft platzierbar.', lv: [{ n: 3, dmg: 22, spd: 1.8 }, { n: 4, dmg: 34, spd: 2.1 }, { n: 5, dmg: 50, spd: 2.4 }] },
+  thwomp:  { name: 'Stampfer', cat: 'Fallen', cost: 100, place: 'air', col: '#7c7c94', desc: 'Kracht herunter, sobald ein Held darunter ist. Unten blockiert er den Weg.', lv: [{ dmg: 120 }, { dmg: 190 }, { dmg: 280 }] },
+  cannon:  { name: 'Kanone', cat: 'Fallen', cost: 80, place: 'air', col: '#45455a', desc: 'Schießt im Takt Kugeln nach links. Zählt auch als Block.', lv: [{ dmg: 30, per: 3 }, { dmg: 48, per: 2.4 }, { dmg: 72, per: 1.8 }] },
+  spring:  { name: 'Katapult', cat: 'Fallen', cost: 60, place: 'floor', col: '#e03a3a', desc: 'Schleudert Helden zurück durch deine Fallen.', lv: [{ push: 4, cd: 2.2 }, { push: 5.5, cd: 1.6 }, { push: 7, cd: 1.1 }] },
+  crawler: { name: 'Kriecher', cat: 'Kreaturen', cost: 25, place: 'floor', minion: true, col: '#9b4dff', desc: 'Kleiner Gegner, läuft hin und her. Helden können ihn plattspringen.', lv: [{ dmg: 18, spd: 14, hp: 30 }, { dmg: 30, spd: 18, hp: 55 }, { dmg: 45, spd: 22, hp: 90 }] },
+  bat:     { name: 'Flatterer', cat: 'Kreaturen', cost: 40, place: 'air', minion: true, col: '#5a2596', desc: 'Fliegt auf und ab und trifft auch Springer. Kann plattgesprungen werden.', lv: [{ dmg: 20, rng: 20, hp: 25 }, { dmg: 32, rng: 28, hp: 45 }, { dmg: 48, rng: 36, hp: 75 }] },
+  spiky:   { name: 'Stachi', cat: 'Kreaturen', cost: 45, place: 'floor', minion: true, col: '#8e1f2c', desc: 'Stacheliger Gegner mit viel Leben. Wer draufspringt, verletzt sich selbst. Helden können ihn mit Waffen bekämpfen.', lv: [{ dmg: 28, spd: 10, hp: 70 }, { dmg: 44, spd: 13, hp: 120 }, { dmg: 66, spd: 16, hp: 200 }] },
 };
 const ORDER = Object.keys(TOOLS);
 const stat = t => TOOLS[t.type].lv[t.lvl - 1];
@@ -463,6 +468,23 @@ function planJump(h) {
 }
 
 // Gegner, Kugeln: kurz davor abspringen (mit etwas Glück)
+// Kreatur direkt vor dem Helden bekämpfen (z. B. im Tunnel, wo man nicht drüberspringen kann)
+function fightMinion(h, dt) {
+  for (const m of minions) {
+    if (!m.alive) continue;
+    const dx = m.x - h.x;
+    if (dx < 0 || dx > (h.w + m.w) / 2 + 3 || h.y < m.y - m.h - 2 || h.y - h.h > m.y) continue;
+    m.hp -= h.def.dps * hpMul * 1.5 * dt; m.hurt = .12; h.attacking = true;
+    if (m.hp <= 0) {
+      m.alive = false; m.squash = .5;
+      for (let k = 0; k < 6; k++) parts.push({ x: m.x, y: m.y - 4, vx: rnd(-50, 50), vy: rnd(-80, -20), life: .4, max: .4, col: '#c9c9d9', g: 300 });
+    }
+    return true;
+  }
+  return false;
+}
+// Platz über dem Kopf zum Springen?
+function headroom(h) { const fr = feetRow(h), c = Math.floor(h.x / TS); return !isSolid(c, fr - 1) && !isSolid(c + 1, fr - 1) && !isSolid(c, fr - 2); }
 function dodge(h) {
   for (const m of minions) {
     if (!m.alive) continue;
@@ -470,7 +492,7 @@ function dodge(h) {
     if (dx < 6 || dx > 34 || Math.abs(m.y - h.y) > 10) continue;
     const pk = 'm' + m.id;
     if (h.plans[pk] === undefined) h.plans[pk] = Math.random() < h.skill + .15 + (h.learn || 0);
-    if (h.plans[pk] && dx < (m.type === 'spiky' ? 26 : 18)) { jump(h, m.type === 'spiky' ? dx + 20 : dx + 4); return true; }
+    if (h.plans[pk] && dx < (m.type === 'spiky' ? 26 : 18) && headroom(h)) { jump(h, m.type === 'spiky' ? dx + 20 : dx + 4); return true; }
   }
   for (const b of bullets) {
     const dx = b.x - h.x;
@@ -568,7 +590,7 @@ function updHero(h, dt, dyn) {
       h.waiting = shouldWait(h);
       h.waitT = h.waiting ? h.waitT + dt : 0;
       h.vx = 0;
-      if (!h.waiting && !planJump(h) && !dodge(h)) h.vx = d.spd;
+      if (!h.waiting && !planJump(h) && !dodge(h) && !fightMinion(h, dt)) h.vx = d.spd;
       moveBody(h, h.vx * dt, h.vy * dt, dyn);
       if (h.hitWall && h.onGround) {
         // Mauer: drüberspringen, wenn sie niedrig genug ist, sonst kaputt schlagen
@@ -595,7 +617,7 @@ function updHero(h, dt, dyn) {
     h.sampleT = 0; h.sampleX = h.x; h.sampleY = h.y;
   }
   h.noProg = h.x > (h.progX ?? -1) + 8 ? (h.progX = h.x, 0) : (h.noProg || 0) + dt;
-  if (h.noProg > 20) { kill(h, 'giveup'); texts.push({ x: h.x, y: h.y - 24, txt: 'gibt auf', col: '#c9c9d9', life: 1.2, max: 1.2 }); return; }
+  if (h.noProg > 20) { const sp = standSpotRight(Math.floor(h.x / TS) + 1, h); h.x = sp.x; h.y = sp.y; h.vy = 0; h.noProg = 0; h.progX = h.x; h.plans = {}; }
   if (h.stuckT >= 6) {
     const s = standSpotRight(Math.floor(h.x / TS), h); h.x = s.x; h.y = s.y; h.vy = 0; h.stuckT = 0; h.plans = {}; teleports++;
   }
@@ -609,6 +631,7 @@ let minionId = 0;
 function spawnMinion(t) {
   const m = { id: ++minionId, src: t, type: t.type, x: t.c * TS + 8, y: (t.r + 1) * TS, vx: 0, vy: 0, w: 12, h: 11, dir: -1, alive: true, t: Math.random() * 6, squash: 0 };
   if (t.type === 'bat') { m.w = 12; m.h = 9; m.homeY = t.r * TS + 12; }
+  m.hp = m.max = stat(t).hp;
   return m;
 }
 function updMinions(dt) {
@@ -635,7 +658,8 @@ function updMinions(dt) {
         for (let k = 0; k < 5; k++) parts.push({ x: m.x, y: m.y - 4, vx: rnd(-50, 50), vy: rnd(-80, -20), life: .4, max: .4, col: '#9b4dff', g: 300 });
         break;
       }
-      damage(h, st.dmg, 'mob'); knock(h, h.x < m.x ? -1 : 1); h.hitCd = .6;
+      damage(h, st.dmg, 'mob'); h.hitCd = .6;
+      if (!h.attacking) knock(h, h.x < m.x ? -1 : 1);
       delete h.plans['m' + m.id]; h.learn = Math.min(.6, (h.learn || 0) + .2); // aus Treffern lernen
     }
   }
@@ -1094,6 +1118,7 @@ function drawMinion(m) {
     return;
   }
   const f = Math.sin(m.t * 10);
+  if (m.hp < m.max) { c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(X - 5, Y - (m.type === 'bat' ? 7 : 12), 10, 1); c.fillStyle = '#ffae5a'; c.fillRect(X - 5, Y - (m.type === 'bat' ? 7 : 12), 10 * clamp(m.hp / m.max, 0, 1), 1); }
   if (m.type === 'bat') {
     const flap = f * 4;
     c.fillStyle = '#0a0c10';
@@ -1219,6 +1244,9 @@ function iconFor(type) {
   c = saved;
   return ic;
 }
+let sortMode = 'art';
+try { sortMode = localStorage.getItem('fallenfuerst_sort') || 'art'; } catch (e) {}
+const toolBtn = {};
 ORDER.forEach(type => {
   const b = document.createElement('button');
   b.className = 'tb'; b.dataset.type = type;
@@ -1226,10 +1254,22 @@ ORDER.forEach(type => {
   const n = document.createElement('div'); n.textContent = TOOLS[type].name; b.append(n);
   const co = document.createElement('div'); co.className = 'c'; co.textContent = TOOLS[type].cost; b.append(co);
   b.addEventListener('click', () => { if (phase !== 'build') return; selType = selType === type ? null : type; closePopup(); refreshPalette(); });
-  palette.append(b);
+  toolBtn[type] = b;
 });
+function renderPalette() {
+  palette.innerHTML = '';
+  if (sortMode === 'cost') [...ORDER].sort((a, b) => TOOLS[a].cost - TOOLS[b].cost).forEach(t => palette.append(toolBtn[t]));
+  else ['Gelände', 'Fallen', 'Kreaturen'].forEach(cat => {
+    const d = document.createElement('div'); d.className = 'pdiv'; d.textContent = cat; palette.append(d);
+    ORDER.filter(t => TOOLS[t].cat === cat).forEach(t => palette.append(toolBtn[t]));
+  });
+  document.querySelectorAll('#psort button').forEach(b => b.classList.toggle('on', b.dataset.m === sortMode));
+  palette.scrollLeft = 0;
+}
+document.querySelectorAll('#psort button').forEach(b => b.onclick = () => { sortMode = b.dataset.m; try { localStorage.setItem('fallenfuerst_sort', sortMode); } catch (e) {} renderPalette(); refreshPalette(); });
+renderPalette();
 function refreshPalette() {
-  for (const b of palette.children) { const t = b.dataset.type; b.classList.toggle('sel', selType === t); b.classList.toggle('poor', S.gold < TOOLS[t].cost); }
+  for (const [t, b] of Object.entries(toolBtn)) { b.classList.toggle('sel', selType === t); b.classList.toggle('poor', S.gold < TOOLS[t].cost); }
 }
 function heroMix(w) { const cnt = {}; planned(w).forEach(t => cnt[t] = (cnt[t] || 0) + 1); return cnt; }
 
@@ -1259,6 +1299,7 @@ function updateUI() {
   $('leaks').textContent = phase === 'wave' ? W.leaks : S.leaks;
   const build = phase === 'build';
   palette.classList.toggle('hide', !build);
+  $('psort').classList.toggle('hide', !build);
   $('waveinfo').classList.toggle('hide', build);
   $('bStart').classList.toggle('hide', !build);
   if (build) {
@@ -1289,8 +1330,8 @@ function statText(type, lvl) {
     case 'thwomp': return `${s.dmg} Schaden pro Aufprall`;
     case 'cannon': return `${s.dmg} Schaden · alle ${s.per}s`;
     case 'spring': return `Wurf ${s.push} Felder · alle ${s.cd}s`;
-    case 'crawler': case 'spiky': return `${s.dmg} Schaden · Tempo ${s.spd}`;
-    case 'bat': return `${s.dmg} Schaden · Flughöhe ${s.rng}`;
+    case 'crawler': case 'spiky': return `${s.hp} Leben · ${s.dmg} Schaden · Tempo ${s.spd}`;
+    case 'bat': return `${s.hp} Leben · ${s.dmg} Schaden · Flughöhe ${s.rng}`;
   }
 }
 const upCost = t => Math.round(TOOLS[t.type].cost * (t.lvl === 1 ? .8 : 1.5));
