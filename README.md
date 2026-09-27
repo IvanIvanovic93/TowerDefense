@@ -56,7 +56,7 @@ Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, s
 Ausgebaut wird nur über den Burg-Knopf oben links neben dem Lord. Der Balken darunter zeigt, wie viele Burgpunkte bis zur nächsten Stufe fehlen. Im Spiel siehst du immer nur, was die nächste Stufe bringt, spätere Freischaltungen bleiben verborgen, gesperrte Bauteile tauchen in der Bauleiste gar nicht erst auf.
 
 - **Kosten:** 6, 10, 15, 21, 28, 36 … Burgpunkte pro Stufe, jede Stufe teurer als die vorige.
-- **Stärke:** Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden und Blöcken, Kanonen und Kreaturen 10 % mehr Leben. Ein Ritter, der in Runde 15 einen Block mit zwei Schlägen zerlegt, braucht mit ausgebauter Burg deutlich länger.
+- **Stärke:** Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden und Blöcken, Kanonen und Kreaturen 10 % mehr Leben, jeweils auf den bisherigen Wert (Faktor 1,1 hoch Stufe minus 1). Stufe 8 ergibt etwa ×1,95, Stufe 12 ×2,85, Stufe 16 ×4,18.
 - **Aussehen:** Die Burg wächst sichtbar mit: Strohhütte, Holzhaus, Palisade, Bergfried, Festung, Schloss, großes Schloss. Schergen stehen auf den Mauern.
 
 Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab den späteren Welten ohne Burgausbau nicht mehr weit.

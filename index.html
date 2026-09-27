@@ -264,7 +264,7 @@ let META = loadMeta();
 const isUnlocked = t => unlockLvl(t) <= META.lvl;
 // Punkte für den Ausbau von Stufe lv auf lv+1: 6, 10, 15, 21, 28, 36, 45 …
 const castleCost = lv => 6 + (lv - 1) * 4 + (lv - 1) * (lv - 2) / 2;
-const castleMul = () => 1 + (META.lvl - 1) * .1;          // jede Stufe: Schaden und Leben aller Bauten +10 %
+const castleMul = (lv = META.lvl) => Math.pow(1.1, lv - 1); // jede Stufe: Schaden und Leben aller Bauten ×1,1 (Zinseszins)
 const cm = v => Math.round(v * castleMul());
 // Bauwerk je Stufe: 1 Strohhütte, 2-3 Holzhaus, 4-5 Palisade mit Turm, 6-7 Bergfried, 8-9 Festung, 10-11 Schloss, 12+ großes Schloss
 const castleStage = () => Math.min(6, Math.floor(META.lvl / 2));
@@ -1707,7 +1707,7 @@ function showCastle(resume, back) {
   showCard(`<div class="hrow"><h2>${STAGE_NAMES[castleStage()]} · Stufe ${META.lvl}</h2>${infoBtn('mInfo')}</div>
     <div class="res"><span>Burgpunkte</span><b class="gold">${META.pts} / ${cost}</b><span>Schaden und Leben deiner Bauten</span><b>+${Math.round((castleMul() - 1) * 100)} %</b></div>
     <div class="cbar-lg"><i style="width:${Math.min(100, META.pts / cost * 100)}%"></i></div>
-    <p>Stufe ${META.lvl + 1} bringt: <b>${next ? unlockText(next) : 'stärkere Bauten'}</b>${next ? ' und +10 % Schaden und Leben' : ' (+10 % Schaden und Leben)'}${nextStage ? `, aus der ${STAGE_NAMES[castleStage()]} wird ${/Schloss/.test(nextStage) ? 'ein ' : 'eine '}${nextStage}` : ''}.</p>
+    <p>Stufe ${META.lvl + 1} bringt: <b>${next ? unlockText(next) : 'stärkere Bauten'}</b>${next ? ' und +10 % Schaden und Leben' : ' (+10 % Schaden und Leben)'}, zusammen dann +${Math.round((castleMul(META.lvl + 1) - 1) * 100)} %${nextStage ? `, aus der ${STAGE_NAMES[castleStage()]} wird ${/Schloss/.test(nextStage) ? 'ein ' : 'eine '}${nextStage}` : ''}.</p>
     <div class="row"><button class="btn pri" id="mUp" ${can ? '' : 'disabled'}>Ausbauen<small>${can ? cost + ' Burgpunkte' : 'noch ' + (cost - META.pts) + ' Burgpunkte'}</small></button><button class="btn" id="mBack">Zurück</button></div>`);
   $('mUp').onclick = () => {
     if (META.pts < cost) return;
@@ -1719,7 +1719,7 @@ function showCastle(resume, back) {
   };
   $('mBack').onclick = back || (() => { paused = wasPaused; hideCard(); updateUI(); });
   $('mInfo').onclick = () => showInfo('Deine Burg', `<p>Kommst du nicht mehr weiter, setzt du die Burg zurück: der Durchgang startet neu bei Runde 1, und du bekommst einen Burgpunkt pro Stern, den du in diesem Durchgang geholt hast.</p>
-    <p>Mit Burgpunkten baust du hier die Burg aus. Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden, Blöcken, Kanonen und Kreaturen 10 % mehr Leben und bringt oft etwas Neues. Die Helden werden mit jeder Runde zäher, ohne Ausbau kommst du irgendwann nicht mehr weiter.</p>
+    <p>Mit Burgpunkten baust du hier die Burg aus. Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden und Blöcken, Kanonen und Kreaturen 10 % mehr Leben, jeweils auf den bisherigen Wert (Zinseszins), und bringt oft etwas Neues. Die Helden werden mit jeder Runde zäher, ohne Ausbau kommst du irgendwann nicht mehr weiter.</p>
     <p>Burgstufe und Burgpunkte bleiben für immer, auch beim Zurücksetzen.</p>`, () => showCastle(wasPaused, back));
 }
 // Burg zurücksetzen: neuer Durchgang ab Runde 1, Sterne werden zu Burgpunkten
