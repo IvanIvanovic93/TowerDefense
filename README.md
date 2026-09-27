@@ -46,7 +46,7 @@ Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar ni
 - **Nicht bestanden:** Runde wiederholen, Gold aus Kills bleibt (in Wiederholungen halbiert).
 - **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (Gold und Bauten bleiben) oder weiter zur nächsten Runde.
 - **Budget:** Jede Runde 150 + 20 pro Runde. Restgold verfällt, Bauten bleiben.
-- **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und großem Budget.
+- **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und dreifachem Rundenbudget.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
 ## Karte

@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.2', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-27.3', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -436,9 +436,8 @@ function planned(w) { if (!preview || preview.w !== w) preview = { w, list: wave
 function starsFor(leaks, total) { const r = leaks / total; return leaks === 0 ? 3 : r <= .05 ? 2 : r < .1 ? 1 : 0; }
 const baseBudget = w => 150 + (w - 1) * 20;
 function budget(w) {
-  if (w === 1 || !isBoss(w - 1)) return baseBudget(w);
-  let sum = 0; for (let k = 1; k <= w; k++) sum += baseBudget(k);
-  return Math.round(sum / 10) * 10;
+  // Nach dem Boss: leeres Feld und das Dreifache eines normalen Rundenbudgets
+  return w > 1 && isBoss(w - 1) ? baseBudget(w) * 3 : baseBudget(w);
 }
 
 function startWave() {
@@ -1678,7 +1677,7 @@ const HELP = `<ul>
   <li>Während einer Runde: tippe auf die Strecke, dann wirft der Lord einen Stein.</li>
   <li>Bestanden ist eine Runde, wenn <b>unter 10 %</b> durchkommen (Bronze). Höchstens 5 % = Silber, keiner = Gold.</li>
   <li>Jede Runde gibt ein festes Budget. Restgold verfällt, deine Bauten bleiben stehen. Nicht bestanden: du behältst das Gold aus den Kills (in Wiederholungen nur die Hälfte).</li>
-  <li>Jede 5. Runde kommt ein Paladin als Boss. Danach geht es in eine neue Welt mit leerem Feld und großem Budget.</li>
+  <li>Jede 5. Runde kommt ein Paladin als Boss. Danach geht es in eine neue Welt mit leerem Feld und dreifachem Budget.</li>
   <li>Du startest mit Block, Loch und Stacheln. Kommst du nicht weiter, setzt du die Burg zurück: jeder Stern des Durchgangs wird zum Burgpunkt. Damit baust du die Burg aus und schaltest neue Fallen, Kreaturen und Schergen frei.</li>
 </ul>`;
 function showStart() {
@@ -1817,7 +1816,7 @@ function showResult(w, stars) {
   if ($('mReset')) markSeen('resetHint');
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice
       ? 'Bestanden, aber nicht perfekt. Nochmal: du behältst dein Gold und deine Bauten, Kills geben nur halbes Gold. Weiter: Restgold verfällt, die nächste Runde startet mit festem Budget.'
-      : passed ? (newWorld ? 'Boss besiegt! Es geht in eine neue Welt: leeres Feld und großes Budget.' : `Restgold verfällt, deine Bauten bleiben stehen.${colsFor(S.wave) > colsFor(w) ? ' Die Strecke wird länger.' : ''}`)
+      : passed ? (newWorld ? 'Boss besiegt! Es geht in eine neue Welt: leeres Feld und dreifaches Budget.' : `Restgold verfällt, deine Bauten bleiben stehen.${colsFor(S.wave) > colsFor(w) ? ' Die Strecke wird länger.' : ''}`)
       : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, in Wiederholungen gibt es aber nur halbes Gold pro Kill.'}</p>
     <p>Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
     ${newTypes ? `<p>Neu: ${HT[newTypes].name} - ${HERO_INFO[newTypes]}</p>` : ''}
