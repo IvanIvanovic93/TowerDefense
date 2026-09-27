@@ -81,7 +81,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .hide{display:none!important}
 #popup{position:absolute;left:50%;top:32px;transform:translateX(-50%);width:min(400px,calc(100% - 16px));padding:16px;display:flex;flex-direction:column;gap:8px}
 #popup .ph{display:flex;align-items:center;gap:8px;font-size:16px;line-height:16px}
-#popup .ph .x{margin-left:auto;width:32px;height:32px;padding:0}
+#popup .ph .x{width:32px;height:32px;padding:0}
 #popup .pd{color:var(--stone)}
 #popup .pb{display:flex;gap:8px}
 #popup .pb .btn{flex:1;flex-direction:row;gap:8px}
@@ -102,10 +102,6 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .card b{color:var(--ink);font-weight:normal;background:var(--tan)}
 .card .row{display:flex;gap:16px}
 .card .row .btn{flex:1;min-height:48px;font-size:16px;line-height:16px}
-.card details summary{cursor:pointer;color:var(--purple);list-style:none}
-.card details summary::before{content:'+ '}
-.card details[open] summary::before{content:'- '}
-.card details ul{margin-top:8px}
 .res{display:grid;grid-template-columns:1fr auto;gap:8px 16px;padding:8px;background:var(--ink);color:var(--white)}
 .res span{color:var(--pale)}
 .res b{text-align:right;color:var(--white);background:none}
@@ -116,8 +112,14 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .lrow{display:flex;align-items:center;gap:16px;padding-top:16px;border-top:2px solid var(--tan)}
 .lrow>div{flex:1}
 .muted{color:var(--stone)!important}
+.ibtn{width:32px;height:32px;padding:0;font-size:16px;line-height:16px;flex:none}
+.hrow{display:flex;align-items:flex-start;gap:16px}
+.hrow>:first-child{flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:4px 8px;background:var(--ink);color:var(--white)}
+.tag.b{background:var(--red)}
+.tag.l{background:var(--purple)}
 .lup{width:48px;height:40px;font-size:16px;flex:none;padding:0}
-.card p.legend{color:var(--stone)}
 .good{color:var(--greenD)!important}.bad{color:var(--red)!important}.gold{color:var(--goldD)!important}
 #rotate{position:fixed;inset:0;z-index:20;background:var(--sky);color:var(--ink);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;padding:24px;font-size:16px;line-height:24px}
 #rotate .ico{width:64px;height:64px;background-size:64px 64px;animation:rot 2s steps(4) infinite}
@@ -1227,7 +1229,6 @@ ORDER.forEach(type => {
     selType = selType === type ? null : type;
     closePopup();
     refreshPalette();
-    if (selType) toast(TRAPS[type].name + ': ' + TRAPS[type].desc, 2600);
   });
   palette.append(b);
 });
@@ -1298,14 +1299,13 @@ function openPopup(i) {
   const tr = S.grid[i], d = TRAPS[tr.type], p = $('popup');
   const build = phase === 'build';
   const canUp = tr.lvl < 3;
-  p.innerHTML = `<div class="ph"><b>${d.name}</b><span class="stars">${ico('star').repeat(tr.lvl)}${ico('stard').repeat(3 - tr.lvl)}</span><button class="btn alt x" id="pX" aria-label="Schließen">${ico('x')}</button></div>
-    <div class="pd">${d.desc}</div>
-    <div class="ps">${statText(tr.type, tr.lvl)}${canUp ? `<br><span class="gold">Nächste Stufe:</span> ${statText(tr.type, tr.lvl + 1)}` : ''}</div>
+  p.innerHTML = `<div class="ph"><b>${d.name}</b><span class="stars">${ico('star').repeat(tr.lvl)}${ico('stard').repeat(3 - tr.lvl)}</span>
+      <span class="sp"></span>${infoBtn('pInfo')}<button class="btn alt x" id="pX" aria-label="Schließen">${ico('x')}</button></div>
     <div class="pb">${canUp ? `<button class="btn pri" id="pUp" ${!build || S.gold < upCost(tr) ? 'disabled' : ''}>${ico('up')} ${upCost(tr)} ${ico('coin')}</button>` : '<button class="btn" disabled>Max. Stufe</button>'}
-    <button class="btn danger" id="pSell" ${!build ? 'disabled' : ''}>Verkaufen +${sellVal(tr)}</button></div>
-    ${build ? '' : '<div class="pd">Bauen nur zwischen den Runden.</div>'}`;
+    <button class="btn danger" id="pSell" ${!build ? 'disabled' : ''}>Verkaufen +${sellVal(tr)}</button></div>`;
   p.classList.remove('hide');
   $('pX').onclick = closePopup;
+  $('pInfo').onclick = () => showInfo(`${d.name} · Stufe ${tr.lvl}`, `<p>${d.desc}</p><p>${statText(tr.type, tr.lvl)}</p>${canUp ? `<p><span class="gold">Nächste Stufe:</span> ${statText(tr.type, tr.lvl + 1)}</p>` : ''}`, hideCard);
   const up = $('pUp');
   if (up) up.onclick = () => {
     if (phase !== 'build' || S.gold < upCost(tr)) return;
@@ -1398,12 +1398,11 @@ const HELP = `<ul>
 
 function showStart() {
   const saved = load();
-  showCard(`<h1>Fallen<span>fürst</span></h1>
-    <p>Dutzende Helden stürmen auf dein Schloss zu. Stell Fallen auf, damit keiner durchkommt.</p>
+  showCard(`<div class="hrow"><h1>Fallen<span>fürst</span></h1>${infoBtn('mInfo')}</div>
     <div class="row">
       ${saved && (saved.wave > 1 || saved.grid.some(Boolean)) ? `<button class="btn pri" id="mCont">Weiter<small>Runde ${saved.wave}</small></button><button class="btn alt" id="mNew">Neues Spiel</button>` : `<button class="btn pri" id="mNew">Spielen</button>`}
-    </div>
-    <details><summary>So wird gespielt</summary>${HELP}</details>`);
+    </div>`);
+  $('mInfo').onclick = () => showInfo('So wird gespielt', '<p>Dutzende Helden stürmen auf dein Schloss zu. Stell Fallen auf, damit keiner durchkommt.</p>' + HELP, showStart);
   const cont = $('mCont');
   if (cont) cont.onclick = () => { S = saved; begin(); };
   $('mNew').onclick = () => { S = newState(); save(); begin(); };
@@ -1431,12 +1430,11 @@ function showLord(resume) {
   const lv = lordLevel(), cur = lordXpFor(lv), nxt = lordXpFor(lv + 1), free = lordFree();
   const rows = Object.entries(LORD_SKILLS).map(([k, sk]) => {
     const l = lord.pts[k], max = l >= LORD_MAX;
-    return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` > <span class="gold">${sk.txt(l + 1)}</span>`}</span></div>
+    return `<div class="lrow"><div><b>${sk.name}</b> <span class="muted">${l}/${LORD_MAX}</span><br><span class="muted">${sk.txt(l)}${max ? '' : ` > </span><span class="gold">${sk.txt(l + 1)}`}</span></div>
       <button class="btn lup" data-k="${k}" ${!free || max ? 'disabled' : ''}>+</button></div>`;
   }).join('');
-  showCard(`<h2>Dunkler Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:8px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>
+  showCard(`<div class="hrow"><h2>Lord · Stufe ${lv} <span class="${free ? 'gold' : 'muted'}" style="font-size:8px">${free} Punkt${free === 1 ? '' : 'e'} frei</span></h2>${infoBtn('mInfo')}</div>
     <div class="bar xp"><i style="width:${Math.min(100, (lord.xp - cur) / (nxt - cur) * 100)}%"></i></div>
-    <p class="muted">${lord.xp - cur} / ${nxt - cur} Erfahrung bis Stufe ${lv + 1} (1 pro Held, 10 pro Paladin). In der Runde auf die Strecke tippen = Steinwurf. Der Lord behält alles, auch bei einem neuen Spiel.</p>
     ${rows}
     <div class="row"><button class="btn pri" id="mBack">Zurück</button></div>`);
   document.querySelectorAll('.lup').forEach(b => b.onclick = () => {
@@ -1444,14 +1442,16 @@ function showLord(resume) {
     lord.pts[b.dataset.k]++; saveLord(); showLord(wasPaused); updateUI();
   });
   $('mBack').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
+  $('mInfo').onclick = () => showInfo('Dunkler Lord', `<p>${lord.xp - cur} / ${nxt - cur} Erfahrung bis Stufe ${lv + 1}. Jeder getötete Held gibt 1 Erfahrung, ein Paladin 10. Jede Stufe gibt einen Punkt.</p>
+    <p>In der Runde auf die Strecke tippen: der Lord wirft einen Stein dorthin.</p><p>Der Lord behält alles, auch bei einem neuen Spiel.</p>`, () => showLord(wasPaused));
 }
 
-function showMenu() {
-  const wasPaused = paused; paused = true;
-  showCard(`<h2>Pause</h2>
+function showMenu(resume) {
+  const wasPaused = resume === undefined ? paused : resume; paused = true;
+  showCard(`<div class="hrow"><h2>Pause</h2>${infoBtn('mInfo')}</div>
     <div class="res"><span>Runde</span><b>${S.wave}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Sterne</span><b>${Object.values(S.stars).reduce((a, b) => a + b, 0)} / ${(S.wave - 1) * 3}</b></div>
-    <div class="row"><button class="btn pri" id="mRes">Weiter</button><button class="btn alt" id="mNew">Neues Spiel</button></div>
-    <details><summary>So wird gespielt</summary>${HELP}</details>`);
+    <div class="row"><button class="btn pri" id="mRes">Weiter</button><button class="btn alt" id="mNew">Neues Spiel</button></div>`);
+  $('mInfo').onclick = () => showInfo('So wird gespielt', HELP, () => showMenu(wasPaused));
   $('mRes').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
   // Zweistufige Bestätigung im Spiel statt confirm()
   $('mNew').onclick = e => {
@@ -1462,6 +1462,13 @@ function showMenu() {
 }
 
 const STAR_NAMES = ['', 'Bronze', 'Silber', 'Gold'];
+// Erklärungen stehen nicht mehr in den Fenstern, sondern hinter einem kleinen i-Knopf
+const infoBtn = id => `<button class="btn alt ibtn" id="${id}" aria-label="Info">i</button>`;
+function showInfo(title, html, back) {
+  showCard(`<h2>${title}</h2>${html}<div class="row"><button class="btn pri" id="mInfoBack">Zurück</button></div>`);
+  $('mInfoBack').onclick = back;
+}
+const HERO_INFO = { rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen. Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' };
 function starRow(n) { return `<span class="stars">${ico('star').repeat(n)}${ico('stard').repeat(3 - n)}</span>`; }
 function showResult(w, stars) {
   const passed = stars > 0;
@@ -1469,23 +1476,23 @@ function showResult(w, stars) {
   const names = Object.entries(next).map(([t, n]) => `${n}× ${HT[t].name}`).join(', ');
   const newTypes = passed && { 2: 'rogue', 3: 'knight', 4: 'cleric', 5: 'mage' }[S.wave];
   const pct = Math.round(W.leaks / waveTotal * 100);
-  showCard(`<h2>Runde ${w} ${passed ? 'bestanden' : 'nicht bestanden'}</h2>
+  showCard(`<div class="hrow"><h2>Runde ${w} ${passed ? 'bestanden' : 'nicht bestanden'}</h2>${infoBtn('mInfo')}</div>
     <div class="big ${passed ? '' : 'bad'}" style="color:${['', 'var(--brick)', 'var(--stone)', 'var(--goldD)'][stars]}">${starRow(stars)} ${passed ? STAR_NAMES[stars] : ''}</div>
     <div class="res">
       <span>Durchgekommen</span><b class="${W.leaks ? 'bad' : 'good'}">${W.leaks} von ${waveTotal} (${pct} %)</b>
       <span>Getötet</span><b>${W.kills}</b>
       ${passed ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${S.retry > 1 ? ' (halbiert)' : ''}</span><b class="gold">+${W.gold}</b>`}
     </div>
-    <p>${passed
-      ? (isBoss(w) ? '<b class="gold">Boss besiegt!</b> Das Feld wird geräumt, du baust mit einem großen Budget neu auf.' : `Restgold verfällt, deine Fallen bleiben stehen.${roadTiles(S.wave) > roadTiles(w) ? ' Die Strecke wird länger.' : ''}`)
-      : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, in Wiederholungen gibt es aber nur halbes Gold pro Kill.'}</p>
-    <p class="legend">Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
     <p><b>${passed ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>
-    ${newTypes ? `<p class="gold">Neu: ${HT[newTypes].name} - ${{ rogue: 'schnell und springt sehr weit.', knight: 'gepanzert, langsam, springt kaum.', cleric: 'heilt Helden in der Nähe.', mage: 'schwebt über Bodenfallen! Nur Flammen, Stampfer, Türme, Frost und Barrikaden wirken.' }[newTypes]}</p>` : ''}
-    ${next.paladin ? `<p class="bad"><b>Bossrunde:</b> ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Gruben. Danach wird das Feld geräumt.</p>` : ''}
-    ${lordFree() ? `<p class="gold"><b>Dunkler Lord Stufe ${lordLevel()}:</b> ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei (Lord-Knopf oben).</p>` : ''}
+    <div class="tags">${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row"><button class="btn pri" id="mOk">Fallen bauen</button></div>`);
   $('mOk').onclick = () => { hideCard(); updateUI(); };
+  $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${passed
+      ? (isBoss(w) ? 'Boss besiegt! Das Feld wird geräumt, du baust mit einem großen Budget neu auf.' : `Restgold verfällt, deine Fallen bleiben stehen.${roadTiles(S.wave) > roadTiles(w) ? ' Die Strecke wird länger.' : ''}`)
+      : 'Bestanden ist die Runde erst unter 10 % Durchbrüchen. Dein Gold behältst du, in Wiederholungen gibt es aber nur halbes Gold pro Kill.'}</p>
+    <p>Bronze: unter 10 % · Silber: höchstens 5 % · Gold: keiner durch</p>
+    ${newTypes ? `<p>Neu: ${HT[newTypes].name} - ${HERO_INFO[newTypes]}</p>` : ''}
+    ${next.paladin ? `<p>Bossrunde: ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Gruben. Danach wird das Feld geräumt.</p>` : ''}`, () => showResult(w, stars));
 }
 
 // ================= Loop =================
