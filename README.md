@@ -38,7 +38,7 @@ Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Bei
 
 Die Bauleiste lässt sich nach Art (Gelände, Fallen, Kreaturen) oder nach Kosten sortieren.
 
-Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
+Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar nicht, ab Burgstufe 2 bis Stufe 2, ab Burgstufe 5 bis Stufe 3. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 
 ## Regeln
 
@@ -67,7 +67,7 @@ Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab
 
 ## Helden
 
-Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Anzahl, Sprungweite und Klugheit der Helden. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit demselben Faktor: `1 + 0,3·(R−1) + 0,35·max(0, R−5) + 0,6·max(0, R−10)` (Runde 5: ×2,2, Runde 10: ×5,45, Runde 15: ×11,7). Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten. Wer von einem Gegner getroffen wird, lernt daraus.
+Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Sprungweite und Klugheit und vor allem die Anzahl der Helden (Runde 1: 42, Runde 5: 90, Runde 10: 190, ab Runde 21: 400), damit Gruben mit ihrer festen Kapazität volllaufen. Große Wellen kommen dichter hintereinander. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit demselben Faktor: `1 + 0,3·(R−1) + 0,35·max(0, R−5) + 0,6·max(0, R−10)` (Runde 5: ×2,2, Runde 10: ×5,45, Runde 15: ×11,7). Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten. Wer von einem Gegner getroffen wird, lernt daraus.
 
 ## Dunkler Lord
 
