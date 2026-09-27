@@ -41,6 +41,27 @@ Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 - **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und großem Budget.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
+## Burg (Fortschritt über Durchgänge)
+
+Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, jeder geholte Stern wird zu einem Burgpunkt. Mit Burgpunkten baust du die Burg aus:
+
+| Stufe | Freischaltung |
+|---|---|
+| 1 | Block, Loch, Stacheln |
+| 2 | Kriecher |
+| 3 | Flammen |
+| 4 | Scherge (wirft automatisch Steine) |
+| 5 | Katapult |
+| 6 | Flatterer |
+| 7 | Feuerrad |
+| 8 | zweiter Scherge |
+| 9 | Stampfer |
+| 10 | Stachi |
+| 11 | Kanone |
+| 12 | dritter Scherge |
+
+Jede Stufe macht außerdem alle Fallen und Kreaturen 3 % stärker. Ausbau kostet 3 Punkte, danach je 2 mehr.
+
 ## Helden
 
 Knappe, Schurke (springt weit und hoch), Ritter (gepanzert, springt kaum), Klerikerin (heilt), Magier (schwebt über Lücken und Bodenfallen), Paladin (Boss, klettert aus Löchern). Mit jeder Runde werden sie klüger, springen weiter und halten mehr aus. Wer von einem Gegner getroffen wird, lernt daraus.
