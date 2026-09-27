@@ -6,6 +6,10 @@ Ein Level-Baukasten für das Handy, in dem du der Bösewicht bist. Dutzende Held
 
 Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per GitHub Pages hosten. Am Handy: "Zum Startbildschirm hinzufügen" startet es im Vollbild-Querformat.
 
+## Erster Start
+
+Beim ersten Spiel führt eine kurze Einführung direkt im Spiel durch die ersten Schritte: Loch wählen, auf den markierten Boden tippen, Runde starten, Steine werfen. Sie lässt sich jederzeit überspringen und erscheint nur einmal. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
+
 ## Grafik
 
 Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschächte, schwebende Leuchtpunkte, dunkle Figuren mit hellen Masken, glühende Augen und Feuer. Oberfläche mit Cinzel und Cormorant Garamond, feinen Linien und Ornamenten. Drei Welten wechseln nach jedem Boss: Nebelwald, Kristallgrotte, Aschenburg (mit Lava).

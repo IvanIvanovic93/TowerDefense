@@ -28,7 +28,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .ico{display:inline-block;width:18px;height:18px;flex:none;background:center/contain no-repeat;vertical-align:-3px}
 .box{position:relative;background:var(--panel);color:var(--text);border:1px solid var(--line);
-  box-shadow:0 0 0 1px rgba(0,0,0,.7),0 24px 60px rgba(0,0,0,.65),inset 0 0 40px rgba(143,182,200,.06)}
+  box-shadow:0 0 0 1px rgba(0,0,0,.7)}
 .box::before,.box::after{content:'';position:absolute;left:50%;width:9px;height:9px;transform:translateX(-50%) rotate(45deg);background:var(--bg);border:1px solid var(--line2)}
 .box::before{top:-5px}.box::after{bottom:-5px}
 .btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 18px;
@@ -36,7 +36,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
   background:linear-gradient(rgba(223,234,240,.05),rgba(223,234,240,0));border:1px solid var(--line);transition:border-color .15s,background .15s,box-shadow .15s}
 .btn:active:not(:disabled){background:rgba(223,234,240,.1);border-color:var(--line2)}
 .btn:disabled{opacity:.35}
-.btn.pri{color:var(--gold);border-color:rgba(232,201,138,.6);background:linear-gradient(rgba(232,201,138,.12),rgba(232,201,138,.02));box-shadow:0 0 18px rgba(232,201,138,.12)}
+.btn.pri{color:var(--gold);border-color:rgba(232,201,138,.6);background:linear-gradient(rgba(232,201,138,.14),rgba(232,201,138,.03))}
 .btn.danger{color:#f2a58e;border-color:rgba(224,122,95,.55)}
 .btn.lordb{color:var(--pale)}
 .btn small{font-family:var(--serif);font-style:italic;font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);margin-top:2px}
@@ -53,12 +53,12 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .sp{flex:1}
 .ib{height:32px;min-width:36px;padding:0 10px;flex-direction:row;gap:7px;font-size:13px}
 .lordb{position:relative}
-.lordb.pts::after{content:'';position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.lordb.pts::after{content:'';position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--bg)}
 #stage{flex:1;position:relative;min-height:0;overflow:hidden;background:var(--bg)}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block}
 #bottom{height:84px;flex:none;display:flex;align-items:stretch;gap:10px;padding:8px 10px;border-top:1px solid var(--line)}
 #psort{flex:none;display:flex;flex-direction:column;gap:6px;width:66px}
-#psort .btn{flex:1;padding:0 4px;font-size:10px;letter-spacing:.1em;color:var(--muted)}
+#psort .btn{flex:1;padding:0 4px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
 #psort .btn.on{color:var(--gold);border-color:rgba(232,201,138,.6)}
 .pdiv{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);align-self:center;font-family:var(--display);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:0 2px;border-left:1px solid var(--line)}
 #palette{flex:1;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x}
@@ -68,7 +68,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
   background:var(--panel2);border:1px solid var(--line);color:var(--light);font-family:var(--display);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
 .tb canvas{width:34px;height:34px}
 .tb .c{font-family:var(--serif);font-size:14px;line-height:1;font-weight:700;letter-spacing:0;color:var(--gold)}
-.tb.sel{border-color:var(--gold);box-shadow:0 0 14px rgba(232,201,138,.25),inset 0 0 18px rgba(232,201,138,.08);color:var(--gold)}
+.tb.sel{border-color:var(--gold);background:linear-gradient(rgba(232,201,138,.14),rgba(232,201,138,.03)),var(--panel2);color:var(--gold)}
 .tb.poor{opacity:.5}
 .tb{position:relative}
 .tb .lock{position:absolute;inset:14px 0 auto 0;font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:0;text-transform:none;color:var(--gold)}
@@ -76,30 +76,45 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .tb.locked{color:var(--muted)}
 .tb.locked .c{visibility:hidden}
 .tag.off{opacity:.45}
-#bCastle.pts::after{content:'';position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+#bCastle.pts::after{content:'';position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--bg)}
 #bCastle{position:relative}
 .tb.poor .c{color:var(--red)}
 #bStart{min-width:170px;font-size:14px}
 #waveinfo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 8px;font-style:italic;font-size:15px;color:var(--light)}
 .bar{height:6px;background:rgba(0,0,0,.5);border:1px solid var(--line)}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(232,201,138,.5),var(--gold));box-shadow:0 0 8px rgba(232,201,138,.6)}
-.bar.xp i{background:linear-gradient(90deg,rgba(184,154,255,.5),var(--violet));box-shadow:0 0 8px rgba(184,154,255,.6)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(232,201,138,.5),var(--gold))}
+.bar.xp i{background:linear-gradient(90deg,rgba(184,154,255,.5),var(--violet))}
 .hide{display:none!important}
 #popup{position:absolute;left:50%;top:30px;transform:translateX(-50%);width:min(420px,calc(100% - 24px));padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 #popup .ph{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:17px;letter-spacing:.08em}
 #popup .ph .x{width:34px;height:34px;padding:0}
 #popup .pb{display:flex;gap:10px}
 #popup .pb .btn{flex:1;flex-direction:row;gap:8px}
+#coach{position:absolute;z-index:5;padding:12px 16px 10px;background:var(--panel);border:1px solid rgba(232,201,138,.55);
+  box-shadow:0 6px 14px rgba(0,0,0,.45);pointer-events:auto;animation:coachIn .35s cubic-bezier(.16,1,.3,1)}
+#coach::after{content:'';position:absolute;left:var(--arrow,50%);bottom:-6px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--panel);border-right:1px solid rgba(232,201,138,.55);border-bottom:1px solid rgba(232,201,138,.55)}
+#coach.below::after{display:none}
+#coach p{font-size:17px;line-height:1.3;color:var(--pale)}
+#coach p b{color:var(--gold);font-weight:700}
+#coach button{margin-top:6px;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:4px 0}
+@keyframes coachIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.coach-target{animation:coachPulse 1.6s ease-in-out infinite;border-color:var(--gold)!important}
+@keyframes coachPulse{0%,100%{outline:1px solid rgba(232,201,138,0);outline-offset:1px}50%{outline:2px solid rgba(232,201,138,.7);outline-offset:4px}}
+@media (prefers-reduced-motion:reduce){#coach,.coach-target{animation:none}}
+.tb.new::before{content:'Neu';position:absolute;top:-1px;right:-1px;padding:1px 6px;background:var(--gold);color:#1a1206;font-family:var(--display);font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.card p.lede{font-size:19px;line-height:1.35;color:var(--pale);max-width:34ch}
+.card p.hint{font-style:italic;color:var(--gold)}
+::selection{background:rgba(232,201,138,.35);color:var(--pale)}
 #toast{position:absolute;left:50%;top:30px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 18px;text-align:center;font-style:italic;font-size:16px;
-  background:var(--panel);color:var(--pale);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.6);opacity:0;transition:opacity .3s;pointer-events:none}
+  background:var(--panel);color:var(--pale);border:1px solid var(--line);box-shadow:0 6px 14px rgba(0,0,0,.45);opacity:0;transition:opacity .3s;pointer-events:none}
 #toast.on{opacity:1}
 #overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10;
   background:radial-gradient(ellipse at center,rgba(5,8,11,.55),rgba(2,3,5,.9));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .card{width:min(540px,100%);max-height:100%;overflow:auto;touch-action:pan-y;padding:22px 26px 28px;display:flex;flex-direction:column;gap:14px}
 .card *{touch-action:pan-y}
-.card h1{font-family:var(--display);font-weight:700;font-size:32px;letter-spacing:.18em;text-transform:uppercase;color:var(--pale);text-shadow:0 0 24px rgba(191,240,255,.25)}
+.card h1{font-family:var(--display);font-weight:700;font-size:32px;letter-spacing:.18em;text-transform:uppercase;color:var(--pale)}
 .card h1 span{color:var(--gold)}
-.card h2{font-family:var(--display);font-weight:500;font-size:19px;letter-spacing:.1em;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.card h2{font-family:var(--display);font-weight:500;font-size:19px;letter-spacing:.08em;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
 .card h2::after{content:'';flex-basis:100%;height:1px;margin-top:8px;background:linear-gradient(90deg,var(--line2),transparent)}
 .card p{color:var(--light);font-size:17px}
 .card ul{margin-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--light);font-size:16px}
@@ -127,7 +142,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .lup{width:46px;height:40px;font-size:20px;flex:none;padding:0}
 .btn.up{flex-direction:row;gap:8px}
 .good{color:var(--green)!important}.bad{color:#f2a58e!important}.gold{color:var(--gold)!important}
-#rotate{position:fixed;inset:0;z-index:20;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px;font-family:var(--display);letter-spacing:.1em;font-size:16px}
+#rotate{position:fixed;inset:0;z-index:20;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px;font-family:var(--display);letter-spacing:.04em;font-size:16px}
 #rotate .ico{width:56px;height:56px;animation:rot 2.4s ease-in-out infinite}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 @media (prefers-reduced-motion:reduce){#rotate .ico{animation:none}}
@@ -153,6 +168,7 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
     <canvas id="game"></canvas>
     <div id="toast"></div>
     <div id="popup" class="box hide"></div>
+    <div id="coach" class="hide" role="status"><p id="coachText"></p><button id="coachSkip">Einführung überspringen</button></div>
   </div>
   <div id="bottom">
     <div id="psort"><button class="btn" data-m="art">Art</button><button class="btn" data-m="cost">Kosten</button></div>
@@ -372,6 +388,7 @@ function startWave() {
   if (phase !== 'build') return;
   closePopup(); selType = null; refreshPalette();
   phase = 'wave';
+  introStep('start', 'throw');
   hpMul = waveHpMul(S.wave);
   const list = planned(S.wave);
   spawnQ = []; let t = 0;
@@ -381,7 +398,6 @@ function startWave() {
   S.things.forEach(t => t.fresh = false);
   resetLevelRuntime();
   heroes = []; stones = []; stoneT = 0; schergeT = [1, 1.8, 2.6];
-  if (lord.xp < 40) setTimeout(() => toast('Tippe auf die Strecke: der Lord wirft Steine!', 2600), 400);
   updateUI();
 }
 
@@ -435,6 +451,7 @@ function kill(h, src) {
   h.dead = true;
   const g = Math.max(1, Math.round(h.def.gold * (1 + (S.wave - 1) * .025) * (S.retry ? .5 : 1)));
   S.gold += g; S.kills++; W.kills++; W.gold += g;
+  if (!seen.firstKill) { markSeen('firstKill'); setTimeout(() => toast('Der erste Held ist gefallen. Jeder Kill bringt Gold.', 2600), 50); }
   const lvBefore = lordLevel();
   lord.xp += h.def.boss ? 10 : 1;
   if (lordLevel() > lvBefore) { saveLord(); texts.push({ x: CASTLE_C * TS + 40, y: 0, txt: 'Lord Stufe ' + lordLevel() + '!', col: '#d9a8ff', life: 2, max: 2 }); }
@@ -783,6 +800,7 @@ function throwStone(wx) {
   if (stoneT > 0) return;
   launchStone(lordPos(), wx, stoneDmg(), false);
   stoneT = stoneCd(); lordThrow = .3;
+  introStep('throw', null);
 }
 function launchStone(o, wx, dmg, auto) {
   const tx = clamp(wx, 0, NC * TS);
@@ -1236,6 +1254,11 @@ function draw() {
   c.textAlign = 'center'; c.font = '600 7px "Cinzel", Georgia, serif';
   for (const t of texts) { c.globalAlpha = clamp(t.life / t.max * 2, 0, 1); c.fillStyle = 'rgba(0,0,0,.7)'; c.fillText(t.txt, t.x + .4, t.y + .4); c.fillStyle = t.col; c.fillText(t.txt, t.x, t.y); }
   c.globalAlpha = 1; c.textAlign = 'left';
+  if (intro === 'place') {
+    const x = introCell.c * TS, y = introCell.r * TS, p = .5 + .5 * Math.sin(time * 4);
+    glow(x + 8, y + 4, 16, 'rgba(232,201,138,.35)', .5 + .5 * p);
+    c.strokeStyle = `rgba(232,201,138,${.5 + .5 * p})`; c.lineWidth = .8; rrect(x + .5, y + .5, 15, 15, 3); c.stroke();
+  }
   if (selThing) {
     const x = selThing.c * TS, y = selThing.r * TS;
     c.strokeStyle = `rgba(232,201,138,${.6 + .4 * Math.sin(time * 5)})`; c.lineWidth = .7; rrect(x - .5, y - .5, 17, 17, 3); c.stroke();
@@ -1314,6 +1337,8 @@ ORDER.forEach(type => {
     if (phase !== 'build') return;
     if (!isUnlocked(type)) { toast(`${TOOLS[type].name}: frei ab Burgstufe ${unlockLvl(type)}`); return; }
     selType = selType === type ? null : type; closePopup(); refreshPalette();
+    if (selType === 'hole') introStep('pick', 'place');
+    if (TOOLS[type] && !seen['t_' + type]) { markSeen('t_' + type); refreshPalette(); }
   });
   const lk = document.createElement('div'); lk.className = 'lock'; b.append(lk);
   toolBtn[type] = b;
@@ -1335,6 +1360,7 @@ function refreshPalette() {
     const open = isUnlocked(t);
     b.classList.toggle('sel', selType === t); b.classList.toggle('poor', open && S.gold < TOOLS[t].cost); b.classList.toggle('locked', !open);
     b.querySelector('.lock').textContent = open ? '' : 'Burg ' + unlockLvl(t);
+    b.classList.toggle('new', open && META.lvl > 1 && unlockLvl(t) > 1 && !seen['t_' + t]);
   }
 }
 function heroMix(w) { const cnt = {}; planned(w).forEach(t => cnt[t] = (cnt[t] || 0) + 1); return cnt; }
@@ -1454,6 +1480,7 @@ function tapWorld(cssX, cssY) {
   const nt = placeThing(selType, col, r);
   spark(nt.c * TS + 8, nt.r * TS + 8, '#c9c9d9', 8);
   closePopup(); save(); updateUI();
+  if (intro === 'pick' || intro === 'place') { intro = 'place'; introStep('place', 'start'); }
 }
 
 let drag = null;
@@ -1479,15 +1506,69 @@ window.addEventListener('keydown', e => {
   clampCam();
 });
 $('bStart').onclick = () => startWave();
+$('coachSkip').onclick = () => finishIntro();
 $('bSpeed').onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 3 : 1; updateUI(); };
 $('bPause').onclick = () => { paused = !paused; updateUI(); };
 $('bMenu').onclick = () => showMenu();
 $('bLord').onclick = () => showLord();
 $('bCastle').onclick = () => showCastle();
 
+// ================= Einführung (einmalig, im echten Spiel) =================
+// Schritte: pick (Loch wählen) → place (auf den Boden tippen) → start (Runde starten) → throw (Stein werfen)
+const INTRO_KEY = 'fallenfuerst_intro_v1', SEEN_KEY = 'fallenfuerst_seen_v1';
+let intro = null; // aktueller Schritt oder null
+let introCell = { c: 12, r: GROUND };
+let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; } catch (e) {}
+const markSeen = k => { seen[k] = 1; try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) {} };
+function introDone() { try { return localStorage.getItem(INTRO_KEY) === '1'; } catch (e) { return false; } }
+function finishIntro() { intro = null; try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) {} placeCoach(); }
+const INTRO_TEXT = {
+  pick:  'Wähle das <b>Loch</b>. Wer hineinfällt, kommt nicht wieder heraus.',
+  place: 'Tippe auf den markierten Boden, um das Loch zu graben.',
+  start: 'Deine Falle steht. <b>Lass die Helden kommen.</b>',
+  throw: 'Tippe auf die Strecke: <b>dein Lord wirft Steine</b> auf die Helden.',
+};
+function startIntro() {
+  if (introDone() || S.wave > 1 || S.things.length) { intro = null; return; }
+  intro = 'pick';
+  const c0 = Math.floor((camX + viewW * .45) / TS);
+  introCell = { c: clamp(c0, BUILD_MIN + 3, BUILD_MAX - 2), r: GROUND };
+  placeCoach();
+}
+function introStep(from, to) {
+  if (intro !== from) return; intro = to;
+  if (!to) { finishIntro(); return; }
+  // der Wurf-Hinweis verdeckt das Spielfeld: nach 12 s von selbst ausblenden
+  if (to === 'throw') setTimeout(() => { if (intro === 'throw') finishIntro(); }, 12000);
+  placeCoach();
+}
+function placeCoach() {
+  const el = $('coach');
+  document.querySelectorAll('.coach-target').forEach(e => e.classList.remove('coach-target'));
+  if (!intro || menuOpen) { el.classList.add('hide'); return; }
+  el.classList.remove('hide');
+  $('coachText').innerHTML = INTRO_TEXT[intro];
+  const st = $('stage').getBoundingClientRect();
+  let tx, ty, below = false;
+  if (intro === 'pick' || intro === 'start') {
+    const t = intro === 'pick' ? toolBtn.hole : $('bStart');
+    t.classList.add('coach-target');
+    if (intro === 'pick') t.scrollIntoView({ block: 'nearest', inline: 'center' });
+    const r = t.getBoundingClientRect(); tx = r.left + r.width / 2 - st.left; ty = r.top - st.top;
+  } else if (intro === 'place') {
+    tx = ((introCell.c * TS + 8) - camX) * SC / dpr; ty = (introCell.r * TS + levelTop) * SC / dpr - 4;
+  } else { tx = st.width * .45; ty = st.height * .55; below = true; }
+  const w = Math.min(290, st.width - 24), x = clamp(tx - w / 2, 12, st.width - w - 12);
+  el.style.width = w + 'px'; el.style.left = x + 'px';
+  el.style.setProperty('--arrow', clamp(tx - x, 18, w - 18) + 'px');
+  el.classList.toggle('below', below);
+  el.style.top = ''; el.style.bottom = '';
+  if (below) el.style.top = '44px'; else el.style.bottom = Math.max(8, st.height - ty + 12) + 'px';
+}
+
 // ================= Fenster =================
-function showCard(html) { $('card').innerHTML = html; $('overlay').classList.remove('hide'); menuOpen = true; }
-function hideCard() { $('overlay').classList.add('hide'); menuOpen = false; }
+function showCard(html) { $('card').innerHTML = html; $('overlay').classList.remove('hide'); menuOpen = true; placeCoach(); }
+function hideCard() { $('overlay').classList.add('hide'); menuOpen = false; placeCoach(); }
 const HELP = `<ul>
   <li>Du bist der <b>Dunkle Lord</b> und baust die Strecke, über die Helden zu deinem Schloss rennen.</li>
   <li>Zwischen den Runden: unten ein Bauteil wählen und aufs Raster tippen. Blöcke, Fallen und Gegner gehen auch in die Luft. Bauteil antippen = Upgrade oder Abreißen.</li>
@@ -1501,6 +1582,7 @@ const HELP = `<ul>
 function showStart() {
   const saved = load();
   showCard(`<div class="hrow"><h1>Fallen<span>fürst</span></h1>${infoBtn('mInfo')}</div>
+    <p class="lede">Du bist der Dunkle Lord. Baue die Strecke, an der eine ganze Horde Helden scheitert, bevor sie dein Schloss erreicht.</p>
     <div class="row">
       ${saved && (saved.wave > 1 || saved.things.length) ? `<button class="btn pri" id="mCont">Weiter<small>Runde ${saved.wave}</small></button><button class="btn alt" id="mNew">Neues Spiel</button>` : `<button class="btn pri" id="mNew">Spielen</button>`}
     </div>`);
@@ -1517,7 +1599,7 @@ function begin() {
   camX = 0; clampCam();
   hideCard(); updateUI();
   tryFullscreen();
-  if (!S.things.length) setTimeout(() => toast('Wähle unten ein Bauteil und tippe aufs Raster', 3000), 300);
+  startIntro();
 }
 function tryFullscreen() {
   const el = document.documentElement;
@@ -1613,7 +1695,7 @@ function showResult(w, stars) {
     <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
       ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kills halbes Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
-      : `<button class="btn pri" id="mOk">${passed ? 'Bauen' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
+      : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: jeder Stern wird zum Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Bauen' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
   if (choice) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; save(); hideCard(); updateUI(); };
     $('mNext').onclick = () => {
@@ -1622,6 +1704,7 @@ function showResult(w, stars) {
     };
   } else $('mOk').onclick = () => { hideCard(); updateUI(); };
   resetButton('mReset');
+  if ($('mReset')) markSeen('resetHint');
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice
       ? 'Bestanden, aber nicht perfekt. Nochmal: du behältst dein Gold und deine Bauten, Kills geben nur halbes Gold. Weiter: Restgold verfällt, die nächste Runde startet mit festem Budget.'
       : passed ? (newWorld ? 'Boss besiegt! Es geht in eine neue Welt: leeres Feld und großes Budget.' : `Restgold verfällt, deine Bauten bleiben stehen.${colsFor(S.wave) > colsFor(w) ? ' Die Strecke wird länger.' : ''}`)
@@ -1639,7 +1722,7 @@ function frame(now) {
   else if (menuOpen && phase === 'build') update(dt * .5);
   draw();
   uiT -= dt;
-  if (uiT <= 0) { uiT = .15; updateUI(); }
+  if (uiT <= 0) { uiT = .15; updateUI(); placeCoach(); }
   requestAnimationFrame(frame);
 }
 window.addEventListener('resize', () => setTimeout(resize, 50));
