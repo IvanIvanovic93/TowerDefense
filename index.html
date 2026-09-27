@@ -146,6 +146,15 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .lup{width:46px;height:40px;font-size:20px;flex:none;padding:0}
 .btn.up{flex-direction:row;gap:8px}
 .good{color:var(--green)!important}.bad{color:#f2a58e!important}.gold{color:var(--gold)!important}
+#map{position:fixed;inset:0;z-index:15;background:var(--bg)}
+#map.hide{display:none}
+#mapcv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#mapbar{position:absolute;left:0;right:0;bottom:0;height:calc(62px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:0 max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left));background:linear-gradient(rgba(5,8,11,0),rgba(5,8,11,.94) 45%)}
+.mapinfo{display:flex;flex-direction:column;gap:2px;min-width:0}
+#mapTitle{font-family:var(--display);font-weight:500;font-size:15px;letter-spacing:.1em;color:var(--pale);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapSub{font-style:italic;font-size:15px;color:var(--muted)}
+#mapGo{min-width:170px;min-height:44px;flex:none}
 #rotate{position:fixed;inset:0;z-index:20;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px;font-family:var(--display);letter-spacing:.04em;font-size:16px}
 #rotate .ico{width:56px;height:56px;animation:rot 2.4s ease-in-out infinite}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
@@ -185,6 +194,10 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
   </div>
 </div>
 <div id="overlay"><div class="card box" id="card"></div></div>
+<div id="map" class="hide">
+  <canvas id="mapcv" aria-label="Karte der Welten"></canvas>
+  <div id="mapbar"><div class="mapinfo"><b id="mapTitle"></b><small id="mapSub"></small></div><button class="btn pri" id="mapGo"></button></div>
+</div>
 <div id="rotate">
   <i class="ico i-phone"></i>
   <div>Bitte Handy quer halten</div>
@@ -251,7 +264,8 @@ let META = loadMeta();
 const isUnlocked = t => unlockLvl(t) <= META.lvl;
 // Punkte für den Ausbau von Stufe lv auf lv+1: 6, 10, 15, 21, 28, 36, 45 …
 const castleCost = lv => 6 + (lv - 1) * 4 + (lv - 1) * (lv - 2) / 2;
-const castleMul = () => 1 + (META.lvl - 1) * .1;          // jede Stufe: alle Fallen und Kreaturen +10 %
+const castleMul = () => 1 + (META.lvl - 1) * .1;          // jede Stufe: Schaden und Leben aller Bauten +10 %
+const cm = v => Math.round(v * castleMul());
 // Bauwerk je Stufe: 1 Strohhütte, 2-3 Holzhaus, 4-5 Palisade mit Turm, 6-7 Bergfried, 8-9 Festung, 10-11 Schloss, 12+ großes Schloss
 const castleStage = () => Math.min(6, Math.floor(META.lvl / 2));
 const STAGE_NAMES = ['Strohhütte', 'Holzhaus', 'Palisade', 'Bergfried', 'Festung', 'Schloss', 'Großes Schloss'];
@@ -311,8 +325,8 @@ function makeThing(type, c, r, lvl = 1, spent = TOOLS[type].cost, fresh = true) 
 }
 function resetThing(t) {
   t.cd = 0; t.anim = 0;
-  if (t.type === 'block') { t.max = stat(t).hp; t.hp = t.max; }
-  if (t.type === 'cannon') { t.max = 120 * t.lvl; t.hp = t.max; }
+  if (t.type === 'block') { t.max = cm(stat(t).hp); t.hp = t.max; }
+  if (t.type === 'cannon') { t.max = cm(120 * t.lvl); t.hp = t.max; }
   if (t.type === 'thwomp') { t.y = t.r * TS; t.state = 'up'; t.vy = 0; t.hits = new Set(); }
   if (t.type === 'cannon') t.t = Math.random() * stat(t).per;
 }
@@ -370,6 +384,8 @@ function moveBody(b, dx, dy, dyn) {
 }
 
 // ================= Wellen =================
+const mulText = v => '×' + v.toFixed(1).replace('.', ',');
+// Leben, Schlagkraft und Heilung der Helden wachsen mit diesem Faktor
 function waveHpMul(w) { return 1 + (w - 1) * .3 + Math.max(0, w - 5) * .35 + Math.max(0, w - 10) * .6; }
 const waveSkill = w => .15 + Math.min(.35, (w - 1) * .03);
 const waveRng = w => 1 + Math.min(.3, (w - 1) * .025);
@@ -696,7 +712,7 @@ let minionId = 0;
 function spawnMinion(t) {
   const m = { id: ++minionId, src: t, type: t.type, x: t.c * TS + 8, y: (t.r + 1) * TS, vx: 0, vy: 0, w: 12, h: 11, dir: -1, alive: true, t: Math.random() * 6, squash: 0 };
   if (t.type === 'bat') { m.w = 12; m.h = 9; m.homeY = t.r * TS + 12; }
-  m.hp = m.max = stat(t).hp;
+  m.hp = m.max = cm(stat(t).hp);
   return m;
 }
 function updMinions(dt) {
@@ -1240,7 +1256,7 @@ function drawHero(h) {
   else { c.beginPath(); c.moveTo(3.4, -5.5 - bob); c.lineTo(8 + sw * .3, -9 - bob + sw); c.stroke(); }
   c.restore();
   if (h.hp < h.max) {
-    const w = d.boss ? 18 : 9, r = clamp(h.hp / h.max, 0, 1), yy = h.y - (d.float ? 22 : 20) * s;
+    const w = (d.boss ? 18 : 9) * Math.min(2, 1 + Math.log2(hpMul) * .35), r = clamp(h.hp / h.max, 0, 1), yy = h.y - (d.float ? 22 : 20) * s;
     c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(h.x - w / 2, yy, w, 1.2);
     c.fillStyle = d.boss ? '#e8c98a' : '#dfeaf0'; c.fillRect(h.x - w / 2, yy, w * r, 1.2);
   }
@@ -1457,7 +1473,7 @@ function updateUI() {
   $('bStart').classList.toggle('hide', !build);
   if (build) {
     const l = planned(S.wave);
-    $('bStart').innerHTML = `<span>Runde ${S.wave}</span><small>${S.retry ? 'Nochmal · ' : ''}${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}</small>`;
+    $('bStart').innerHTML = `<span>Runde ${S.wave}</span><small>${S.retry ? 'Nochmal · ' : ''}${l.length} Helden${l.includes('paladin') ? ' + Boss' : ''}${S.wave > 1 ? ' · Stärke ' + mulText(waveHpMul(S.wave)) : ''}</small>`;
     refreshPalette();
   } else {
     const left = heroes.length + spawnQ.length;
@@ -1479,16 +1495,16 @@ function toast(msg, ms = 1600) { const t = $('toast'); t.textContent = msg; t.cl
 function statText(type, lvl) {
   const s = TOOLS[type].lv[lvl - 1];
   switch (type) {
-    case 'block': return `${s.hp} Lebenspunkte`;
+    case 'block': return `${cm(s.hp)} Lebenspunkte`;
     case 'hole': return `Füllt sich nach ${s.cap} gefallenen Helden pro Reihe`;
-    case 'spikes': return `${s.dps} Schaden/s`;
-    case 'flame': return `${s.dps} Schaden/s (${FLAME_ON}s an, ${(FLAME_P - FLAME_ON).toFixed(1)}s aus)`;
-    case 'firebar': return `${s.n} Kugeln · ${s.dmg} Schaden pro Treffer`;
-    case 'thwomp': return `${s.dmg} Schaden pro Aufprall`;
-    case 'cannon': return `${s.dmg} Schaden · alle ${s.per}s`;
+    case 'spikes': return `${cm(s.dps)} Schaden/s`;
+    case 'flame': return `${cm(s.dps)} Schaden/s (${FLAME_ON}s an, ${(FLAME_P - FLAME_ON).toFixed(1)}s aus)`;
+    case 'firebar': return `${s.n} Kugeln · ${cm(s.dmg)} Schaden pro Treffer`;
+    case 'thwomp': return `${cm(s.dmg)} Schaden pro Aufprall`;
+    case 'cannon': return `${cm(lvl * 120)} Leben · ${cm(s.dmg)} Schaden · alle ${s.per}s`;
     case 'spring': return `Wurf ${s.push} Felder · alle ${s.cd}s`;
-    case 'crawler': case 'spiky': return `${s.hp} Leben · ${s.dmg} Schaden · Tempo ${s.spd}`;
-    case 'bat': return `${s.hp} Leben · ${s.dmg} Schaden · Flughöhe ${s.rng}`;
+    case 'crawler': case 'spiky': return `${cm(s.hp)} Leben · ${cm(s.dmg)} Schaden · Tempo ${s.spd}`;
+    case 'bat': return `${cm(s.hp)} Leben · ${cm(s.dmg)} Schaden · Flughöhe ${s.rng}`;
   }
 }
 const upCost = t => Math.round(TOOLS[t.type].cost * (t.lvl === 1 ? .8 : 1.5));
@@ -1650,8 +1666,8 @@ function showStart() {
     </div>`);
   $('mInfo').onclick = () => showInfo('So wird gespielt', HELP, showStart);
   const cont = $('mCont');
-  if (cont) cont.onclick = () => { S = saved; begin(); };
-  $('mNew').onclick = () => { S = newState(); save(); resetLord(); begin(); };
+  if (cont) cont.onclick = () => { S = saved; hideCard(); tryFullscreen(); showMap(S.wave, S.wave, begin); };
+  $('mNew').onclick = () => { S = newState(); save(); resetLord(); hideCard(); tryFullscreen(); showMap(1, 1, begin); };
 }
 function begin() {
   applyLength(S.wave); rebuildTM();
@@ -1689,20 +1705,21 @@ function showCastle(resume, back) {
   const next = UNLOCKS.find(u => u.lvl === META.lvl + 1), cost = castleCost(META.lvl), can = META.pts >= cost;
   const nextStage = castleStage() !== Math.min(6, Math.floor((META.lvl + 1) / 2)) ? STAGE_NAMES[Math.min(6, Math.floor((META.lvl + 1) / 2))] : null;
   showCard(`<div class="hrow"><h2>${STAGE_NAMES[castleStage()]} · Stufe ${META.lvl}</h2>${infoBtn('mInfo')}</div>
-    <div class="res"><span>Burgpunkte</span><b class="gold">${META.pts} / ${cost}</b><span>Schaden deiner Fallen und Kreaturen</span><b>+${Math.round((castleMul() - 1) * 100)} %</b></div>
+    <div class="res"><span>Burgpunkte</span><b class="gold">${META.pts} / ${cost}</b><span>Schaden und Leben deiner Bauten</span><b>+${Math.round((castleMul() - 1) * 100)} %</b></div>
     <div class="cbar-lg"><i style="width:${Math.min(100, META.pts / cost * 100)}%"></i></div>
-    <p>Stufe ${META.lvl + 1} bringt: <b>${next ? unlockText(next) : 'mehr Schaden'}</b>${next ? ' und +10 % Schaden' : ' (+10 %)'}${nextStage ? `, aus der ${STAGE_NAMES[castleStage()]} wird ${/Schloss/.test(nextStage) ? 'ein ' : 'eine '}${nextStage}` : ''}.</p>
+    <p>Stufe ${META.lvl + 1} bringt: <b>${next ? unlockText(next) : 'stärkere Bauten'}</b>${next ? ' und +10 % Schaden und Leben' : ' (+10 % Schaden und Leben)'}${nextStage ? `, aus der ${STAGE_NAMES[castleStage()]} wird ${/Schloss/.test(nextStage) ? 'ein ' : 'eine '}${nextStage}` : ''}.</p>
     <div class="row"><button class="btn pri" id="mUp" ${can ? '' : 'disabled'}>Ausbauen<small>${can ? cost + ' Burgpunkte' : 'noch ' + (cost - META.pts) + ' Burgpunkte'}</small></button><button class="btn" id="mBack">Zurück</button></div>`);
   $('mUp').onclick = () => {
     if (META.pts < cost) return;
     META.pts -= cost; META.lvl++; saveMeta();
     const u = UNLOCKS.find(x => x.lvl === META.lvl);
-    toast(u ? 'Freigeschaltet: ' + unlockText(u) : 'Burg ausgebaut: Fallen stärker', 2400);
+    if (phase === 'build') S.things.forEach(resetThing);
+    toast(u ? 'Freigeschaltet: ' + unlockText(u) : 'Burg ausgebaut: Bauten stärker', 2400);
     renderPalette(); refreshPalette(); updateUI(); showCastle(wasPaused, back);
   };
   $('mBack').onclick = back || (() => { paused = wasPaused; hideCard(); updateUI(); });
   $('mInfo').onclick = () => showInfo('Deine Burg', `<p>Kommst du nicht mehr weiter, setzt du die Burg zurück: der Durchgang startet neu bei Runde 1, und du bekommst einen Burgpunkt pro Stern, den du in diesem Durchgang geholt hast.</p>
-    <p>Mit Burgpunkten baust du hier die Burg aus. Jede Stufe macht alle Fallen und Kreaturen 10 % stärker und bringt etwas Neues. Die Helden werden mit jeder Runde zäher, ohne Ausbau kommst du irgendwann nicht mehr weiter.</p>
+    <p>Mit Burgpunkten baust du hier die Burg aus. Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden, Blöcken, Kanonen und Kreaturen 10 % mehr Leben und bringt oft etwas Neues. Die Helden werden mit jeder Runde zäher, ohne Ausbau kommst du irgendwann nicht mehr weiter.</p>
     <p>Burgstufe und Burgpunkte bleiben für immer, auch beim Zurücksetzen.</p>`, () => showCastle(wasPaused, back));
 }
 // Burg zurücksetzen: neuer Durchgang ab Runde 1, Sterne werden zu Burgpunkten
@@ -1725,7 +1742,8 @@ function showMenu(resume) {
   showCard(`<div class="hrow"><h2>Pause</h2>${infoBtn('mInfo')}</div>
     <div class="res"><span>Runde</span><b>${S.wave}</b><span>Welt</span><b>${themeFor(S.wave).name}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Sterne</span><b>${Object.values(S.stars).reduce((a, b) => a + b, 0)} / ${(S.wave - 1) * 3}</b></div>
     <div class="row"><button class="btn pri" id="mRes">Weiter</button><button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button></div>
-    <div class="row"><button class="btn alt" id="mNew">Alles löschen<small>auch Burgstufe</small></button></div>`);
+    <div class="row"><button class="btn" id="mMap">Karte</button><button class="btn alt" id="mNew">Alles löschen<small>auch Burgstufe</small></button></div>`);
+  $('mMap').onclick = () => { hideCard(); showMap(S.wave, S.wave, () => showMenu(wasPaused), 'Zurück'); };
   $('mInfo').onclick = () => showInfo('So wird gespielt', HELP, () => showMenu(wasPaused));
   resetButton('mReset');
   $('mRes').onclick = () => { paused = wasPaused; hideCard(); updateUI(); };
@@ -1753,18 +1771,18 @@ function showResult(w, stars) {
       <span>Getötet</span><b>${W.kills}</b>
       ${advanced ? `<span>Budget für Runde ${S.wave}</span><b class="gold">${S.gold}</b>` : `<span>Gold durch Kills${S.retry > 1 ? ' (halbiert)' : ''}</span><b class="gold">+${W.gold}</b>`}
     </div>
-    ${choice ? `<p>Nicht perfekt. Willst du die Runde nochmal spielen, um mehr Sterne zu holen, oder weiterziehen?</p>` : `<p><b>${advanced ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}</p>`}
+    ${choice ? `<p>Nicht perfekt. Willst du die Runde nochmal spielen, um mehr Sterne zu holen, oder weiterziehen?</p>` : `<p><b>${advanced ? 'Nächste Runde' : 'Nochmal'}:</b> ${names}${advanced ? ` · Stärke ${mulText(waveHpMul(S.wave))}` : ''}</p>`}
     <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Punkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
       ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kills halbes Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
-      : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: jeder Stern wird zum Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Bauen' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
+      : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: jeder Stern wird zum Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
   if (choice) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; save(); hideCard(); updateUI(); };
     $('mNext').onclick = () => {
       advance(w); rebuildTM(); resetLevelRuntime(); save(); hideCard(); updateUI();
-      if (newWorld) toast('Neue Welt: ' + themeFor(S.wave).name, 2200);
+      showMap(w, S.wave, () => updateUI());
     };
-  } else $('mOk').onclick = () => { hideCard(); updateUI(); };
+  } else $('mOk').onclick = () => { hideCard(); updateUI(); if (passed) showMap(w, S.wave, () => updateUI()); };
   resetButton('mReset');
   if ($('mReset')) markSeen('resetHint');
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice
@@ -1776,10 +1794,206 @@ function showResult(w, stars) {
     ${!choice && next.paladin ? `<p>Bossrunde: ${next.paladin > 1 ? next.paladin + ' Paladine kommen' : 'Ein Paladin kommt'}. Er klettert sogar aus Löchern.</p>` : ''}`, () => showResult(w, stars));
 }
 
+
+// ================= Karte =================
+// Jede Welt hat 5 Felder, das fünfte ist die Bossburg. Nach jeder geschafften Runde läuft der Lord ein Feld nach oben.
+const MAP_SP = 72, MAP_GAP = 64, MAP_BAR = 62, MAP_X = [.3, .62, .4, .68, .5];
+const mapCv = $('mapcv'), mc = mapCv.getContext('2d');
+let mapOpen = false, mapCam = 0, mapFree = false, mapAnim = null, mapBanner = null, mapW = 0, mapH = 0, mapT = 0, mapDragY = null;
+const mapY = w => 64 + (w - 1) * MAP_SP + Math.floor((w - 1) / 5) * MAP_GAP;      // Höhe über dem unteren Rand
+const mapX = w => mapW / 2 + (MAP_X[(w - 1) % 5] - .5) * Math.min(mapW, 560);
+const mapSY = ym => mapH - MAP_BAR - (ym - mapCam);
+const bandStart = k => k === 0 ? -600 : (mapY(k * 5) + mapY(k * 5 + 1)) / 2;
+const mapCamFor = ym => Math.max(0, ym - (mapH - MAP_BAR) * .38);
+const mapLast = () => (Math.floor((S.wave - 1) / 5) + 2) * 5;                     // bis zum Ende der nächsten Welt sichtbar
+function mapResize() {
+  const d = Math.min(window.devicePixelRatio || 1, 2.5);
+  mapW = innerWidth; mapH = innerHeight;
+  mapCv.width = Math.round(mapW * d); mapCv.height = Math.round(mapH * d); mc.setTransform(d, 0, 0, d, 0, 0);
+}
+function mglow(x, y, r, col, a = 1) {
+  const g = mc.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+  mc.globalAlpha = a; mc.fillStyle = g; mc.fillRect(x - r, y - r, r * 2, r * 2); mc.globalAlpha = 1;
+}
+function mapSeg(a) { const x0 = mapX(a), y0 = mapY(a), x2 = mapX(a + 1), y2 = mapY(a + 1); return [x0, y0, (x0 + x2) / 2 + (a % 2 ? 30 : -30), (y0 + y2) / 2, x2, y2]; }
+const qpt = (g, t) => { const u = 1 - t; return [u * u * g[0] + 2 * u * t * g[2] + t * t * g[4], u * u * g[1] + 2 * u * t * g[3] + t * t * g[5]]; };
+function mapMarker() {
+  if (!mapAnim) return [mapX(S.wave), mapY(S.wave), false];
+  const p = clamp((mapAnim.t - .5) / (1.1 * (mapAnim.to - mapAnim.from) + .3), 0, 1);
+  if (p >= 1) return [mapX(mapAnim.to), mapY(mapAnim.to), false];
+  const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2, span = mapAnim.to - mapAnim.from, f = e * span;
+  const a = Math.min(mapAnim.to - 1, mapAnim.from + Math.floor(f));
+  const [x, y] = qpt(mapSeg(a), f - (a - mapAnim.from));
+  return [x, y, p > 0];
+}
+function mapScenery(k, th, y0, y1) {
+  const r = seeded(k * 977 + 13), zone = Math.max(90, (mapW - Math.min(mapW, 560)) / 2 + 70), kind = k % 3;
+  for (let i = 0; i < 16; i++) {
+    const side = i % 2, x = side ? mapW - r() * zone : r() * zone, ym = y0 + 30 + r() * Math.max(0, y1 - y0 - 170), y = mapSY(ym), s = .7 + r() * .6;
+    if (y < -160 || y > mapH + 40) { r(); continue; }
+    mc.fillStyle = i % 3 ? th.mid : th.far;
+    if (kind === 0) {        // Bäume
+      mc.fillRect(x - 3 * s, y - 90 * s, 6 * s, 90 * s);
+      mc.beginPath(); mc.ellipse(x, y - 92 * s, 26 * s, 18 * s, 0, 0, 7); mc.fill();
+      mc.strokeStyle = th.rim; mc.globalAlpha = .18; mc.lineWidth = 1; mc.beginPath(); mc.ellipse(x, y - 92 * s, 26 * s, 18 * s, 0, 3.4, 5.2); mc.stroke(); mc.globalAlpha = 1;
+    } else if (kind === 1) { // Kristalle
+      const h = 50 * s + r() * 30;
+      mc.beginPath(); mc.moveTo(x - 9 * s, y); mc.lineTo(x - 4 * s, y - h); mc.lineTo(x + 1 * s, y - h - 10 * s); mc.lineTo(x + 8 * s, y); mc.fill();
+      mc.strokeStyle = th.rim; mc.globalAlpha = .35; mc.lineWidth = 1; mc.beginPath(); mc.moveTo(x - 4 * s, y - h); mc.lineTo(x + 1 * s, y - h - 10 * s); mc.lineTo(x + 8 * s, y); mc.stroke(); mc.globalAlpha = 1;
+      mglow(x, y - h * .6, 22 * s, th.glow, .08 + .05 * Math.sin(mapT * 1.5 + i));
+    } else {                 // Türme und Glut
+      const h = 60 * s + r() * 40, w = 12 * s;
+      mc.fillRect(x - w / 2, y - h, w, h);
+      mc.beginPath(); mc.moveTo(x - w / 2 - 2, y - h); mc.lineTo(x, y - h - 18 * s); mc.lineTo(x + w / 2 + 2, y - h); mc.fill();
+      mglow(x, y, 30 * s, '#ff6a2a', .12 + .05 * Math.sin(mapT * 2 + i));
+    }
+  }
+  for (let i = 0; i < 14; i++) {  // Leuchtpunkte
+    const x = r() * mapW, ym = y0 + r() * (y1 - y0) + Math.sin(mapT * .6 + i) * 8, a = .3 + .3 * Math.sin(mapT * 1.3 + i * 2);
+    mc.fillStyle = th.mote; mc.globalAlpha = a; mc.fillRect(x + Math.sin(mapT * .4 + i) * 10, mapSY(ym), 1.5, 1.5); mc.globalAlpha = 1;
+  }
+}
+function mstar(x, y, r, on) {
+  mc.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; mc.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  mc.closePath();
+  if (on) { mc.fillStyle = '#e8c98a'; mc.fill(); } else { mc.strokeStyle = 'rgba(214,228,236,.35)'; mc.lineWidth = .8; mc.stroke(); }
+}
+function mapBoss(x, y, done, cur) {
+  const d = '#030507';
+  if (!done) mglow(x, y - 14, 46, '#e03a3a', .18 + .08 * Math.sin(mapT * 2));
+  mc.fillStyle = d;
+  mc.fillRect(x - 17, y - 16, 34, 16);
+  mc.fillRect(x - 17, y - 28, 9, 12); mc.fillRect(x + 8, y - 28, 9, 12); mc.fillRect(x - 6, y - 38, 12, 22);
+  mc.beginPath(); mc.moveTo(x - 8, y - 38); mc.lineTo(x, y - 50); mc.lineTo(x + 8, y - 38); mc.fill();
+  for (const [a, b] of [[-17, 9], [8, 9]]) for (let i = 0; i < b; i += 4) mc.fillRect(x + a + i, y - 31, 2.5, 3);
+  mc.strokeStyle = done ? 'rgba(232,201,138,.8)' : cur ? '#dfeaf0' : 'rgba(214,228,236,.35)'; mc.lineWidth = 1;
+  mc.beginPath(); mc.moveTo(x - 17, y); mc.lineTo(x - 17, y - 28); mc.moveTo(x - 6, y - 16); mc.lineTo(x - 6, y - 38); mc.lineTo(x, y - 50); mc.stroke();
+  const wc = done ? '#e8c98a' : '#ff5a4a';
+  mc.fillStyle = wc; mc.globalAlpha = .6 + .4 * Math.sin(mapT * 3); mc.fillRect(x - 2, y - 30, 4, 5); mc.fillRect(x - 14, y - 22, 3, 4); mc.fillRect(x + 11, y - 22, 3, 4); mc.globalAlpha = 1;
+  mc.fillStyle = '#020304'; mc.beginPath(); mc.moveTo(x - 5, y); mc.lineTo(x - 5, y - 6); mc.quadraticCurveTo(x, y - 12, x + 5, y - 6); mc.lineTo(x + 5, y); mc.fill();
+}
+function mapLord(x, y, walking) {
+  const b = walking ? Math.abs(Math.sin(mapT * 12)) * 2.5 : Math.sin(mapT * 2) * .8;
+  y -= b;
+  mglow(x, y - 12, 26, '#ff6a3a', .12);
+  mc.fillStyle = '#020304';
+  mc.beginPath(); mc.moveTo(x - 8, y); mc.quadraticCurveTo(x - 7, y - 14, x, y - 17); mc.quadraticCurveTo(x + 7, y - 14, x + 8, y); mc.fill();
+  mc.beginPath(); mc.ellipse(x, y - 19, 4.5, 4.2, 0, 0, 7); mc.fill();
+  mc.strokeStyle = '#020304'; mc.lineWidth = 1.6;
+  mc.beginPath(); mc.moveTo(x - 3, y - 22); mc.quadraticCurveTo(x - 7, y - 25, x - 5.5, y - 30); mc.moveTo(x + 3, y - 22); mc.quadraticCurveTo(x + 7, y - 25, x + 5.5, y - 30); mc.stroke();
+  mc.fillStyle = '#ff6a3a'; mc.fillRect(x - 2.6, y - 20, 1.6, 1.4); mc.fillRect(x + 1, y - 20, 1.6, 1.4);
+  mglow(x - 1.8, y - 19.4, 3, '#ff6a3a'); mglow(x + 1.8, y - 19.4, 3, '#ff6a3a');
+}
+function drawMap(dt) {
+  if (mapAnim) {
+    mapAnim.t += dt;
+    const end = .5 + 1.1 * (mapAnim.to - mapAnim.from) + .3;
+    if (!mapAnim.done && mapAnim.t >= end) {
+      mapAnim.done = true;
+      if (mapAnim.world) mapBanner = { t: 0, name: themeFor(mapAnim.to).name, sub: `Welt ${Math.floor((mapAnim.to - 1) / 5) + 1}` };
+    }
+  }
+  if (mapBanner) mapBanner.t += dt;
+  const [mx, my, walking] = mapMarker(), last = mapLast();
+  if (!mapFree) mapCam += (mapCamFor(my) - mapCam) * Math.min(1, dt * 4);
+  mc.fillStyle = '#05080b'; mc.fillRect(0, 0, mapW, mapH);
+  // Welten als Bänder
+  const lastWorld = Math.floor((last - 1) / 5);
+  for (let k = 0; k <= lastWorld; k++) {
+    const th = THEMES[k % THEMES.length], y0 = bandStart(k), y1 = k === lastWorld ? mapY(last) + 400 : bandStart(k + 1);
+    const sTop = mapSY(y1), sBot = mapSY(y0);
+    if (sBot < 0 || sTop > mapH) continue;
+    const g = mc.createLinearGradient(0, sTop, 0, sBot); g.addColorStop(0, th.bg[0]); g.addColorStop(.6, th.bg[1]); g.addColorStop(1, th.bg[2]);
+    mc.fillStyle = g; mc.fillRect(0, sTop, mapW, sBot - sTop);
+    mc.fillStyle = th.fog + '.035)';
+    for (let i = 0; i < 3; i++) { const x = (i * .37 + .1) * mapW; mc.beginPath(); mc.moveTo(x, sTop); mc.lineTo(x + 60, sTop); mc.lineTo(x + 180, sBot); mc.lineTo(x + 110, sBot); mc.fill(); }
+    if (k > 0) { const sy = mapSY(y0), gs = mc.createLinearGradient(0, sy - 110, 0, sy + 110); gs.addColorStop(0, 'rgba(5,8,11,0)'); gs.addColorStop(.5, '#05080b'); gs.addColorStop(1, 'rgba(5,8,11,0)'); mc.fillStyle = gs; mc.fillRect(0, sy - 110, mapW, 220); }
+  }
+  for (let k = 0; k <= lastWorld; k++) {
+    const th = THEMES[k % THEMES.length], y0 = bandStart(k), y1 = k === lastWorld ? mapY(last) + 400 : bandStart(k + 1);
+    if (mapSY(y0) < 0 || mapSY(y1) > mapH) continue;
+    mapScenery(k, th, y0, y1);
+    // Weltname
+    const ly = mapSY(mapY(k * 5 + 1) - 34);
+    mc.textAlign = 'left'; mc.fillStyle = 'rgba(214,228,236,.5)'; mc.font = '500 10px Cinzel, Georgia, serif';
+    mc.fillText(`WELT ${k + 1}`, 16, ly - 16);
+    mc.fillStyle = th.rim; mc.font = '500 16px Cinzel, Georgia, serif'; mc.fillText(th.name, 16, ly + 2);
+  }
+  // Weg
+  const reached = mapAnim ? mapAnim.from : S.wave;
+  mc.lineWidth = 1.6; mc.setLineDash([3, 6]);
+  for (let a = 1; a < last; a++) {
+    const g = mapSeg(a);
+    mc.strokeStyle = a < reached ? 'rgba(232,201,138,.7)' : 'rgba(214,228,236,.22)';
+    mc.beginPath(); mc.moveTo(g[0], mapSY(g[1])); mc.quadraticCurveTo(g[2], mapSY(g[3]), g[4], mapSY(g[5])); mc.stroke();
+  }
+  mc.setLineDash([]);
+  // Felder
+  const cur = mapAnim && !mapAnim.done ? -1 : S.wave;
+  for (let w = 1; w <= last; w++) {
+    const x = mapX(w), y = mapSY(mapY(w)), done = w < S.wave || (mapAnim && w === mapAnim.from), th = THEMES[Math.floor((w - 1) / 5) % THEMES.length];
+    if (y < -60 || y > mapH + 60) continue;
+    if (isBoss(w)) mapBoss(x, y + 8, done, w === cur);
+    else {
+      if (w === cur) mglow(x, y, 30, th.glow, .25 + .12 * Math.sin(mapT * 3));
+      mc.fillStyle = '#070b0f'; mc.beginPath(); mc.arc(x, y, w === cur ? 12 : 10, 0, 7); mc.fill();
+      mc.strokeStyle = done ? 'rgba(232,201,138,.85)' : w === cur ? '#dfeaf0' : 'rgba(214,228,236,.3)'; mc.lineWidth = 1.2; mc.stroke();
+      mc.fillStyle = done ? '#e8c98a' : w === cur ? '#dfeaf0' : 'rgba(214,228,236,.45)';
+      mc.font = '500 10px Cinzel, Georgia, serif'; mc.textAlign = 'center'; mc.fillText(w, x, y + 3.5);
+    }
+    if (done) {
+      const n = S.stars[w] || 0, pop = mapAnim && w === mapAnim.from ? clamp((mapAnim.t - .1) * 3, 0, 1) : 1;
+      for (let i = 0; i < 3; i++) mstar(x - 11 + i * 11, y + 22, 4.2 * (i < n ? pop : 1), i < n);
+    }
+  }
+  const onBoss = !walking && isBoss(S.wave);
+  mapLord(mx + (onBoss ? 28 : 0), mapSY(my) + (onBoss ? 8 : -11), walking);
+  // Nebel über dem sichtbaren Ende
+  const fy = mapSY(mapY(last) + 40), gf = mc.createLinearGradient(0, fy - 120, 0, fy + 30);
+  gf.addColorStop(0, '#05080b'); gf.addColorStop(1, 'rgba(5,8,11,0)');
+  mc.fillStyle = gf; mc.fillRect(0, fy - 120, mapW, 150); if (fy - 120 > 0) { mc.fillStyle = '#05080b'; mc.fillRect(0, 0, mapW, fy - 120); }
+  // Neue Welt
+  if (mapBanner) {
+    const a = clamp(mapBanner.t * 2, 0, 1) * clamp((3.2 - mapBanner.t) * 2, 0, 1);
+    if (a <= 0) mapBanner = null;
+    else {
+      mglow(mapW / 2, 62, 190, 'rgba(5,8,11,.95)', a);
+      mc.globalAlpha = a; mc.textAlign = 'center';
+      mc.fillStyle = 'rgba(214,228,236,.7)'; mc.font = '500 11px Cinzel, Georgia, serif'; mc.fillText(`NEUE WELT · ${mapBanner.sub.toUpperCase()}`, mapW / 2, 46);
+      mc.fillStyle = '#e8c98a'; mc.font = '500 24px Cinzel, Georgia, serif'; mc.fillText(mapBanner.name, mapW / 2, 76);
+      mc.globalAlpha = 1;
+    }
+  }
+}
+function showMap(from, to, go, goLabel) {
+  mapOpen = true; menuOpen = true; closePopup(); placeCoach();
+  $('map').classList.remove('hide'); mapResize();
+  mapAnim = from < to ? { from, to, t: 0, world: isBoss(from) } : null;
+  mapBanner = null; mapFree = false; mapCam = mapCamFor(mapY(from));
+  const pos = (to - 1) % 5 + 1;
+  $('mapTitle').textContent = `${themeFor(to).name} · Runde ${to}`;
+  $('mapSub').textContent = isBoss(to) ? `Welt ${Math.floor((to - 1) / 5) + 1} · Bossburg` : `Welt ${Math.floor((to - 1) / 5) + 1} · Feld ${pos} von 5`;
+  const b = $('mapGo');
+  b.innerHTML = goLabel || `Runde ${to} bauen<small>${S.gold} Gold</small>`;
+  b.onclick = () => { closeMap(); go(); };
+}
+function closeMap() { mapOpen = false; mapAnim = null; $('map').classList.add('hide'); menuOpen = !$('overlay').classList.contains('hide'); placeCoach(); }
+mapCv.addEventListener('pointerdown', e => { mapDragY = e.clientY; mapCv.setPointerCapture(e.pointerId); });
+mapCv.addEventListener('pointermove', e => {
+  if (mapDragY === null) return;
+  const dy = e.clientY - mapDragY; mapDragY = e.clientY;
+  if (Math.abs(dy) > 0) mapFree = true;
+  mapCam = clamp(mapCam + dy, 0, Math.max(0, mapY(mapLast()) - (mapH - MAP_BAR) * .5));
+});
+mapCv.addEventListener('pointerup', () => { mapDragY = null; });
+mapCv.addEventListener('pointercancel', () => { mapDragY = null; });
+
 // ================= Loop =================
 let last = performance.now(), uiT = 0;
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (mapOpen) { mapT += dt; drawMap(dt); requestAnimationFrame(frame); return; }
   if (!paused && !menuOpen) for (let k = 0; k < speed; k++) update(dt);
   else if (menuOpen && phase === 'build') update(dt * .5);
   draw();
@@ -1787,7 +2001,7 @@ function frame(now) {
   if (uiT <= 0) { uiT = .15; updateUI(); placeCoach(); }
   requestAnimationFrame(frame);
 }
-window.addEventListener('resize', () => setTimeout(resize, 50));
+window.addEventListener('resize', () => setTimeout(() => { resize(); if (mapOpen) mapResize(); }, 50));
 S = load() || newState();
 applyLength(S.wave); rebuildTM(); resetLevelRuntime();
 resize();

@@ -45,6 +45,10 @@ Alles hat 3 Stufen. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
 - **Boss:** Jede 5. Runde Paladine. Danach neue Welt mit leerem Feld und großem Budget.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
+## Karte
+
+Jede Welt besteht aus 5 Feldern, das fünfte ist die Bossburg. Nach jeder geschafften Runde zeigt die Karte deine Sterne und der Lord läuft ein Feld weiter nach oben. Nach dem Boss geht es in die nächste Welt. Sichtbar ist immer nur die aktuelle und die nächste Welt. Die Karte lässt sich auch über das Menü öffnen und mit dem Finger verschieben.
+
 ## Burg (Fortschritt über Durchgänge)
 
 Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, jeder geholte Stern wird zu einem Burgpunkt.
@@ -52,14 +56,14 @@ Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, s
 Ausgebaut wird nur über den Burg-Knopf oben links neben dem Lord. Der Balken darunter zeigt, wie viele Burgpunkte bis zur nächsten Stufe fehlen. Im Spiel siehst du immer nur, was die nächste Stufe bringt, spätere Freischaltungen bleiben verborgen, gesperrte Bauteile tauchen in der Bauleiste gar nicht erst auf.
 
 - **Kosten:** 6, 10, 15, 21, 28, 36 … Burgpunkte pro Stufe, jede Stufe teurer als die vorige.
-- **Schaden:** Jede Stufe macht alle Fallen und Kreaturen 10 % stärker.
+- **Stärke:** Jede Stufe gibt allen Fallen und Kreaturen 10 % mehr Schaden und Blöcken, Kanonen und Kreaturen 10 % mehr Leben. Ein Ritter, der in Runde 15 einen Block mit zwei Schlägen zerlegt, braucht mit ausgebauter Burg deutlich länger.
 - **Aussehen:** Die Burg wächst sichtbar mit: Strohhütte, Holzhaus, Palisade, Bergfried, Festung, Schloss, großes Schloss. Schergen stehen auf den Mauern.
 
 Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab den späteren Welten ohne Burgausbau nicht mehr weit.
 
 ## Helden
 
-Knappe, Schurke (springt weit und hoch), Ritter (gepanzert, springt kaum), Klerikerin (heilt), Magier (schwebt über Lücken und Bodenfallen), Paladin (Boss, klettert aus Löchern). Mit jeder Runde werden sie klüger, springen weiter und halten mehr aus. Wer von einem Gegner getroffen wird, lernt daraus.
+Knappe, Schurke (springt weit und hoch), Ritter (gepanzert, springt kaum), Klerikerin (heilt), Magier (schwebt über Lücken und Bodenfallen), Paladin (Boss, klettert aus Löchern). Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit demselben Faktor: `1 + 0,3·(R−1) + 0,35·max(0, R−5) + 0,6·max(0, R−10)` (Runde 5: ×2,2, Runde 10: ×5,45, Runde 15: ×11,7). Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten. Wer von einem Gegner getroffen wird, lernt daraus.
 
 ## Dunkler Lord
 
