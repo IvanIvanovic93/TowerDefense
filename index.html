@@ -240,7 +240,7 @@ const ORDER = Object.keys(TOOLS);
 const stat = t => TOOLS[t.type].lv[t.lvl - 1];
 
 const HT = {
-  squire:  { name: 'Knappe', hp: 30, spd: 32, jv: 270, rng: 2.6, skill: .35, gold: 3, dps: 8, w: 10, h: 14 },
+  squire:  { name: 'Knappe', hp: 30, spd: 32, jv: 270, rng: 2.6, skill: .15, gold: 3, dps: 8, w: 10, h: 14 },
   rogue:   { name: 'Schurke', hp: 22, spd: 46, jv: 300, rng: 3.6, skill: .85, gold: 4, dps: 6, w: 10, h: 14 },
   knight:  { name: 'Ritter', hp: 95, spd: 22, jv: 225, rng: 1.7, skill: .25, gold: 7, dps: 16, w: 10, h: 14, armor: .35 },
   cleric:  { name: 'Klerikerin', hp: 40, spd: 28, jv: 265, rng: 2.5, skill: .5, gold: 6, dps: 6, w: 10, h: 14, heal: true },
@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen, Einführung). Nur die Sortierung bleibt erhalten.
-const DATA_VERSION = '2026-09-28.11', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.12', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1', 'fallenfuerst_intro_v1'].forEach(k => localStorage.removeItem(k));
@@ -414,7 +414,8 @@ const mulText = v => '×' + v.toFixed(1).replace('.', ',');
 function waveHpMul(w) { return Math.pow(1.1, w - 1); }      // +10 % pro Runde, wie die Burg
 const waveSpd = w => 1 + Math.max(0, w - 10) * .02;          // ab Welt 3: +2 % Tempo pro Runde
 // In Runde 2 und 3 sind die Helden noch Grünschnäbel und erkennen kaum eine Falle
-const waveSkill = w => w === 2 ? -.25 : w === 3 ? -.1 : .15 + Math.min(.45, (w - 1) * .05);
+// Erfahrung der Helden: in Welt 1 noch Grünschnäbel, danach langsam klüger (höchstens +0,45)
+const waveSkill = w => w <= 5 ? [0, 0, -.2, -.15, -.1, -.05][w] : Math.min(.45, (w - 5) * .03);
 const waveRng = w => 1 + Math.min(.35, (w - 1) * .04);
 // Heldenzahl wächst schnell: Gruben haben eine feste Kapazität und sollen irgendwann volllaufen
 // Welt 1 ist der Einstieg: ein Herausforderer, dann kleine Trupps
@@ -620,7 +621,8 @@ function planJump(h, dt = 0) {
     let p = h.plans[pk];
     if (!p) {
       let known = false; for (let cc = s; cc <= e; cc++) if (W && W.known && W.known.has(cc)) known = true;   // hier sind schon Kameraden gestorben
-      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .35 : 0) + (known ? .4 : 0));
+      // Löcher sieht man leichter; aus dem Tod von Kameraden lernen sie anfangs wenig, später viel
+      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .2 : 0) + (known ? Math.min(.4, .1 + S.wave * .012) : 0));
       const err = (Math.random() - .5) * (1 - h.skill) * 18;
       p = h.plans[pk] = { jump: see, tx: x0 - Math.max(2, (R - (x1 - x0)) / 2) + err, done: false };
     }
