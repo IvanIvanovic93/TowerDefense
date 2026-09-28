@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-28.3', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.4', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -410,10 +410,13 @@ const mulText = v => '×' + v.toFixed(1).replace('.', ',');
 // Leben, Schlagkraft und Heilung der Helden wachsen mit diesem Faktor
 function waveHpMul(w) { return Math.pow(1.1, w - 1); }      // +10 % pro Runde, wie die Burg
 const waveSpd = w => 1 + Math.max(0, w - 10) * .02;          // ab Welt 3: +2 % Tempo pro Runde
-const waveSkill = w => .15 + Math.min(.45, (w - 1) * .05);
+// In Runde 2 und 3 sind die Helden noch Grünschnäbel und erkennen kaum eine Falle
+const waveSkill = w => w === 2 ? -.25 : w === 3 ? -.1 : .15 + Math.min(.45, (w - 1) * .05);
 const waveRng = w => 1 + Math.min(.35, (w - 1) * .04);
 // Heldenzahl wächst schnell: Gruben haben eine feste Kapazität und sollen irgendwann volllaufen
-function waveCount(w) { return Math.min(34 + w * 8 + Math.max(0, w - 5) * 12, 400); }
+// Welt 1 ist der Einstieg: ein Herausforderer, dann kleine Trupps
+const INTRO_COUNTS = [0, 1, 6, 10, 30, 50];
+function waveCount(w) { return w <= 5 ? INTRO_COUNTS[w] : Math.min(34 + w * 8 + Math.max(0, w - 5) * 12, 400); }
 // Nach jedem Boss kommt ein neuer Heldentyp dazu
 const TYPE_FROM = { rogue: 6, knight: 11, cleric: 16, mage: 21 };
 const newTypeAt = w => Object.keys(TYPE_FROM).find(t => TYPE_FROM[t] === w);
@@ -444,6 +447,7 @@ const baseBudget = w => 150 + (w - 1) * 20;
 const killMul = () => Math.pow(.7, S.retry || 0);
 const killValue = h => Math.max(.25, h.def.gold * (1 + (S.wave - 1) * .025) * .35 * killMul());
 function budget(w) {
+  if (w === 1) return 0;   // Runde 1: nur der Lord und seine Steine
   // Nach dem Boss: leeres Feld und das Anderthalbfache eines normalen Rundenbudgets
   return w > 1 && isBoss(w - 1) ? Math.round(baseBudget(w) * 1.5 / 10) * 10 : baseBudget(w);
 }
@@ -452,7 +456,7 @@ function startWave() {
   if (phase !== 'build') return;
   closePopup(); selType = null; refreshPalette();
   phase = 'wave';
-  introStep('start', 'throw');
+  introStep('start1', 'throw'); introStep('start', null);
   hpMul = waveHpMul(S.wave);
   const list = planned(S.wave);
   spawnQ = []; let t = 0;
@@ -489,15 +493,25 @@ function endWave() {
 }
 
 // ================= Helden =================
+const TAUNTS = ['Ein Dunkler Lord in einer Strohhütte? Lächerlich!', 'Ha! Deine Burg macht mir keine Angst!'];
+function updHerald(dt) {
+  if (!W.herald) { W.herald = { x: 30, t: 0 }; tpFx(30, GROUND * TS - 7, 14); }
+  const hd = W.herald; hd.t += dt;
+  if (hd.t > .6 && hd.t < 2.2) hd.x += 30 * dt;
+  if (hd.t > 6.4 && hd.t < 8) hd.x -= 36 * dt;
+  if (hd.t > 8.2 && !hd.gone) { hd.gone = true; tpFx(hd.x, GROUND * TS - 7, 14); }
+  if (hd.t > 8.6) hd.done = true;
+}
 function spawnHero(type) {
   const d = HT[type];
   heroes.push({
     type, def: d, x: rnd(10, 26), y: GROUND * TS, vx: 0, vy: 0, w: d.w, h: d.h,
-    hp: d.hp * hpMul, max: d.hp * hpMul, spd: d.spd * waveSpd(S.wave),
+    hp: d.hp * hpMul, max: d.hp * hpMul, spd: d.spd * waveSpd(S.wave) * (S.wave === 1 ? .7 : 1),
     skill: Math.min(.95, d.skill + waveSkill(S.wave)), rng: d.rng * waveRng(S.wave), jv: d.jv,
     st: 'run', onGround: true, plans: {}, anim: Math.random() * 10, flash: 0, healT: rnd(1, 3),
     kb: 0, hitCd: 0, fbCd: 0, bestX: 0, stuckT: 0, wallTries: 0, waitT: 0, waiting: false, dead: false,
   });
+  if (S.wave === 1) { const h = heroes[heroes.length - 1]; h.challenger = true; h.say = { txt: TAUNTS[castleStage() ? 1 : 0], t: 4 }; }
 }
 const airTime = h => 2 * h.jv / G;
 function jump(h, dist) { h.vy = -h.jv; h.vx = Math.max(h.spd, dist / airTime(h)); h.onGround = false; }
@@ -507,6 +521,7 @@ function damage(h, amt, src) {
   if (h.def.armor && src !== 'pit') amt *= (1 - h.def.armor);
   if (src !== 'stone' && src !== 'pit') amt *= castleMul();
   h.hp -= amt;
+  if (h.challenger && src === 'stone' && !h.hitSaid && h.hp > 0) { h.hitSaid = true; h.say = { txt: 'Au! Glückstreffer!', t: 2 }; }
   if (amt > 2 || Math.random() < .15) h.flash = .08;
   if (Math.random() < Math.min(.9, amt * .08)) spark(h.x, h.y - h.h / 2, src === 'fire' ? '#ff9a2e' : '#e03a3a', 1);
   if (h.hp <= 0) kill(h, src);
@@ -742,6 +757,7 @@ function updHero(h, dt, dyn) {
   if (h.slamT > 0) h.slamT -= dt;
   if (h.tpIn > 0) h.tpIn -= dt;
   if (h.stingT > 0) h.stingT -= dt;
+  if (h.say && (h.say.t -= dt) <= 0) h.say = null;
 
   if (d.float) {
     // Magier schweben knapp über dem höchsten Grund vor sich
@@ -938,7 +954,7 @@ function throwStone(wx) {
   if (stoneT > 0) return;
   launchStone(lordPos(), wx, stoneDmg(), false);
   stoneT = stoneCd(); lordThrow = .3;
-  introStep('throw', null);
+  introStep('throw', 'watch');
 }
 function launchStone(o, wx, dmg, auto) {
   const tx = clamp(wx, 0, NC * TS);
@@ -1004,7 +1020,11 @@ function update(dt) {
     heroes = heroes.filter(h => !h.dead);
     updSchergen(dt);
     updStones(dt);
-    if (!spawnQ.length && !heroes.length) endWave();
+    if (!spawnQ.length && !heroes.length) {
+      // Runde 1: der besiegte Herausforderer kehrt als Geist zurück und droht, dann erst endet die Runde
+      if (S.wave === 1 && W.kills > 0 && !(W.herald && W.herald.done)) updHerald(dt);
+      else endWave();
+    }
   } else if (minions.length) {
     // In der Bauphase laufen die Gegner zur Vorschau herum
     updMinions(dt);
@@ -1331,11 +1351,29 @@ const HERO_LOOK = {
   mage:    { body: '#221634', mask: '#e6e0f2', trim: '#b89aff' },
   paladin: { body: '#2a2418', mask: '#f3e2b0', trim: '#e8c98a' },
 };
+// Sprechblase über einer Figur, bleibt im sichtbaren Bereich
+function drawSay(x, y, txt, a) {
+  if (a <= 0) return;
+  c.font = 'italic 600 6.5px "Cormorant Garamond", Georgia, serif';
+  const words = txt.split(' '), lines = []; let line = '';
+  for (const wd of words) { const t = line ? line + ' ' + wd : wd; if (c.measureText(t).width > 92 && line) { lines.push(line); line = wd; } else line = t; }
+  lines.push(line);
+  const w = Math.max(...lines.map(l => c.measureText(l).width)) + 10, hh = lines.length * 7.5 + 5;
+  const bx = clamp(x - w / 2, camX + 4, camX + viewW - w - 4), by = Math.max(-levelTop + 18, y - hh - 6);
+  c.globalAlpha = a;
+  c.fillStyle = 'rgba(8,13,18,.94)'; rrect(bx, by, w, hh, 3); c.fill();
+  c.strokeStyle = 'rgba(214,228,236,.5)'; c.lineWidth = .5; c.stroke();
+  c.fillStyle = 'rgba(8,13,18,.94)'; c.beginPath(); c.moveTo(clamp(x - 3, bx + 4, bx + w - 10), by + hh); c.lineTo(clamp(x, bx + 6, bx + w - 6), by + hh + 4); c.lineTo(clamp(x + 3, bx + 8, bx + w - 4), by + hh); c.fill();
+  c.fillStyle = '#e3ecf1'; c.textAlign = 'center';
+  lines.forEach((l, k) => c.fillText(l, bx + w / 2, by + 9 + k * 7.5));
+  c.textAlign = 'left'; c.globalAlpha = 1;
+}
 function drawHero(h) {
   const d = h.def, L = HERO_LOOK[h.type], s = d.boss ? 1.8 : 1;
   const moving = (h.onGround || d.float) && !h.attacking && !h.waiting && (h.vx > 0 || d.float);
   const ph = Math.sin(h.anim * .35), bob = moving ? Math.abs(ph) * .8 : 0;
   c.save(); c.translate(h.x, h.y + (d.float ? Math.sin(time * 3 + h.anim) * 1.2 : 0)); c.scale(s, s);
+  if (h.face < 0) c.scale(-1, 1);
   if (h.tpIn > 0) { c.globalAlpha = 1 - h.tpIn / .4; c.scale(1 - h.tpIn, 1 + h.tpIn * .6); }
   if (h.kb > 0) c.rotate(-.25);
   if (d.boss) glow(0, -9, 16, 'rgba(232,201,138,.35)');
@@ -1438,6 +1476,13 @@ function draw() {
   for (const t of S.things) if (t.c >= c0 - 3 && t.c <= c1 + 3) drawThing(t, 0, th);
   for (const m of minions) drawMinion(m);
   for (const h of heroes) if (h.x > camX - 20 && h.x < camX + viewW + 20) drawHero(h);
+  if (phase === 'wave' && W && W.herald && !W.herald.gone) {
+    const hd = W.herald, a = clamp(hd.t / .6, 0, 1) * .75;
+    const ghost = { type: 'squire', def: HT.squire, x: hd.x, y: GROUND * TS, w: 10, h: 14, anim: hd.t * 30, hp: 1, max: 1, onGround: true, vx: (hd.t > .6 && hd.t < 2.2) || (hd.t > 6.4 && hd.t < 8) ? 1 : 0, face: hd.t > 6.4 ? -1 : 1, flash: 0, kb: 0 };
+    c.globalAlpha = a; glow(hd.x, GROUND * TS - 8, 12, 'rgba(190,160,255,.5)'); c.globalAlpha = a; drawHero(ghost); c.globalAlpha = 1;
+    if (hd.t > 1.2 && hd.t < 6.4) drawSay(hd.x, GROUND * TS - 20, 'Das war nur ein Kratzer! Ich komme wieder, mit meiner ganzen Armee!', clamp((hd.t - 1.2) * 3, 0, 1) * clamp((6.4 - hd.t) * 3, 0, 1));
+  }
+  for (const h of heroes) if (h.say) drawSay(h.x, h.y - 20, h.say.txt, clamp(h.say.t * 3, 0, 1));
   for (const t of S.things) if (t.c >= c0 - 3 && t.c <= c1 + 3) drawThing(t, 1, th);
   for (const b of bullets) { glow(b.x + 3, b.y, 4, 'rgba(255,200,150,.35)'); c.fillStyle = '#0a0d10'; c.beginPath(); c.arc(b.x, b.y, 2.4, 0, 7); c.fill(); c.strokeStyle = th.rim; c.lineWidth = .5; c.stroke(); }
   for (const st of stones) {
@@ -1455,7 +1500,7 @@ function draw() {
   c.textAlign = 'center'; c.font = '600 7px "Cinzel", Georgia, serif';
   for (const t of texts) { c.globalAlpha = clamp(t.life / t.max * 2, 0, 1); c.fillStyle = 'rgba(0,0,0,.7)'; c.fillText(t.txt, t.x + .4, t.y + .4); c.fillStyle = t.col; c.fillText(t.txt, t.x, t.y); }
   c.globalAlpha = 1; c.textAlign = 'left';
-  if (intro === 'place') {
+  if (intro === 'place' || intro === 'place2') {
     const x = introCell.c * TS, y = introCell.r * TS, p = .5 + .5 * Math.sin(time * 4);
     glow(x + 8, y + 4, 16, 'rgba(232,201,138,.35)', .5 + .5 * p);
     c.strokeStyle = `rgba(232,201,138,${.5 + .5 * p})`; c.lineWidth = .8; rrect(x + .5, y + .5, 15, 15, 3); c.stroke();
@@ -1538,7 +1583,7 @@ ORDER.forEach(type => {
     if (phase !== 'build') return;
     if (!isUnlocked(type)) { toast(`${TOOLS[type].name}: frei ab Burgstufe ${unlockLvl(type)}`); return; }
     selType = selType === type ? null : type; closePopup(); refreshPalette();
-    if (selType === 'hole') introStep('pick', 'place');
+    if (selType === 'spikes') introStep('pick', 'place');
     if (TOOLS[type] && !seen['t_' + type]) { markSeen('t_' + type); refreshPalette(); }
   });
   const lk = document.createElement('div'); lk.className = 'lock'; b.append(lk);
@@ -1685,7 +1730,8 @@ function tapWorld(cssX, cssY) {
   const nt = placeThing(selType, col, r);
   spark(nt.c * TS + 8, nt.r * TS + 8, '#c9c9d9', 8);
   closePopup(); save(); updateUI();
-  if (intro === 'pick' || intro === 'place') { intro = 'place'; introStep('place', 'start'); }
+  if (intro === 'place' || intro === 'pick') { intro = 'place2'; introCell = { c: nt.c + 3, r: nt.r }; placeCoach(); }
+  else if (intro === 'place2') introStep('place2', 'start');
 }
 
 let drag = null;
@@ -1728,39 +1774,45 @@ const markSeen = k => { seen[k] = 1; try { localStorage.setItem(SEEN_KEY, JSON.s
 function introDone() { try { return localStorage.getItem(INTRO_KEY) === '1'; } catch (e) { return false; } }
 function finishIntro() { intro = null; try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) {} placeCoach(); }
 const INTRO_TEXT = {
-  pick:  'Wähle das <b>Loch</b>. Wer hineinfällt, kommt nicht wieder heraus.',
-  place: 'Tippe auf den markierten Boden, um das Loch zu graben.',
-  start: 'Deine Falle steht. <b>Lass die Helden kommen.</b>',
-  throw: 'Tippe auf die Strecke: <b>dein Lord wirft Steine</b> auf die Helden.',
+  start1: 'Ein Held nähert sich deiner Hütte. <b>Starte die Runde</b> und empfange ihn.',
+  throw:  'Er lacht dich aus. <b>Tippe auf die Strecke</b>, dein Lord wirft Steine. Erwisch ihn!',
+  pick:   'Er holt seine Armee. <b>Bereite dich vor:</b> wähle die Stacheln.',
+  place:  'Tippe auf den markierten Boden. Wer die Stacheln berührt, stirbt.',
+  place2: 'Noch eine. Jede Stachel hält einige Tote, dann bildet die letzte Leiche eine Brücke.',
+  start:  'Deine Fallen stehen. <b>Lass die Helden kommen.</b>',
 };
+// Geführter Einstieg: Runde 1 nur Steine werfen, in Runde 2 die ersten Stacheln nach Anleitung
 function startIntro() {
-  if (introDone() || S.wave > 1 || S.things.length) { intro = null; return; }
-  intro = 'pick';
-  const c0 = Math.floor((camX + viewW * .45) / TS);
-  introCell = { c: clamp(c0, BUILD_MIN + 3, BUILD_MAX - 2), r: GROUND };
+  if (introDone() || S.things.length || S.wave > 2) { intro = null; return; }
+  if (S.wave === 1) intro = 'start1';
+  else {
+    intro = 'pick';
+    const c0 = Math.floor((camX + viewW * .45) / TS);
+    introCell = { c: clamp(c0, BUILD_MIN + 3, BUILD_MAX - 5), r: GROUND - 1 };
+  }
   placeCoach();
 }
 function introStep(from, to) {
   if (intro !== from) return; intro = to;
   if (!to) { finishIntro(); return; }
   // der Wurf-Hinweis verdeckt das Spielfeld: nach 12 s von selbst ausblenden
-  if (to === 'throw') setTimeout(() => { if (intro === 'throw') finishIntro(); }, 12000);
+  if (to === 'throw') setTimeout(() => { if (intro === 'throw') { intro = 'watch'; placeCoach(); } }, 12000);
   placeCoach();
 }
 function placeCoach() {
   const el = $('coach');
   document.querySelectorAll('.coach-target').forEach(e => e.classList.remove('coach-target'));
-  if (!intro || menuOpen) { el.classList.add('hide'); return; }
+  if (!intro || menuOpen || !INTRO_TEXT[intro]) { el.classList.add('hide'); return; }
   el.classList.remove('hide');
   $('coachText').innerHTML = INTRO_TEXT[intro];
   const st = $('stage').getBoundingClientRect();
   let tx, ty, below = false;
-  if (intro === 'pick' || intro === 'start') {
-    const t = intro === 'pick' ? toolBtn.hole : $('bStart');
+  if (intro === 'pick' || intro === 'start' || intro === 'start1') {
+    const t = intro === 'pick' ? toolBtn.spikes : $('bStart');
     t.classList.add('coach-target');
     if (intro === 'pick') t.scrollIntoView({ block: 'nearest', inline: 'center' });
     const r = t.getBoundingClientRect(); tx = r.left + r.width / 2 - st.left; ty = r.top - st.top;
-  } else if (intro === 'place') {
+  } else if (intro === 'place' || intro === 'place2') {
     tx = ((introCell.c * TS + 8) - camX) * SC / dpr; ty = (introCell.r * TS + levelTop) * SC / dpr - 4;
   } else { tx = st.width * .45; ty = st.height * .55; below = true; }
   const w = Math.min(290, st.width - 24), x = clamp(tx - w / 2, 12, st.width - w - 12);
@@ -1919,9 +1971,13 @@ function showResult(w, stars) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; save(); hideCard(); updateUI(); };
     $('mNext').onclick = () => {
       advance(w); rebuildTM(); resetLevelRuntime(); save(); hideCard(); updateUI();
-      showMap(w, S.wave, () => updateUI());
+      showMap(w, S.wave, () => { updateUI(); startIntro(); });
     };
-  } else $('mOk').onclick = () => { hideCard(); updateUI(); if (passed) showMap(w, S.wave, () => updateUI()); };
+  } else $('mOk').onclick = () => {
+    hideCard(); updateUI();
+    if (passed) showMap(w, S.wave, () => { updateUI(); startIntro(); });
+    else if (w === 1 && !introDone()) { intro = 'start1'; placeCoach(); }
+  };
   resetButton('mReset');
   if ($('mReset')) markSeen('resetHint');
   $('mInfo').onclick = () => showInfo('Runde ' + w, `<p>${choice

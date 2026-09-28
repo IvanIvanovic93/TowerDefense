@@ -12,7 +12,7 @@ Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per
 
 ## Erster Start
 
-Beim ersten Spiel führt eine kurze Einführung direkt im Spiel durch die ersten Schritte: Loch wählen, auf den markierten Boden tippen, Runde starten, Steine werfen. Sie lässt sich jederzeit überspringen und erscheint nur einmal. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
+Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, der den Lord verspottet. Es gibt kein Baugold: Man muss ihn mit Steinen abwerfen, die Einführung zeigt wie. Danach kehrt er als Geist zurück, droht mit seiner ganzen Armee und verschwindet. In Runde 2 führt die Einführung durch die ersten zwei Stacheln, dann kommen 6 unerfahrene Knappen. Runde 3 bringt 10, Runde 4 30 und Runde 5 50 Helden plus Boss. Die Einführung lässt sich jederzeit überspringen und erscheint nur einmal. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
 
 ## Grafik
 
@@ -69,7 +69,7 @@ Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab
 
 ## Helden
 
-Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Sprungweite und Klugheit und vor allem die Anzahl der Helden (Runde 1: 42, Runde 5: 74, Runde 10: 174, ab Runde 22: 400), damit Gruben mit ihrer festen Kapazität volllaufen. Große Wellen kommen dichter hintereinander. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit Zinseszins um 10 % pro Runde (Runde 5: ×1,46, Runde 10: ×2,36, Runde 15: ×3,8), also genau wie die Burg pro Stufe. Ab Welt 3 (Runde 11) werden die Helden außerdem 2 % pro Runde schneller. Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten.
+Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Sprungweite und Klugheit und vor allem die Anzahl der Helden (Welt 1: 1, 6, 10, 30, 50, dann Runde 6: 94, Runde 10: 174, ab Runde 22: 400), damit Gruben mit ihrer festen Kapazität volllaufen. Große Wellen kommen dichter hintereinander. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit Zinseszins um 10 % pro Runde (Runde 5: ×1,46, Runde 10: ×2,36, Runde 15: ×3,8), also genau wie die Burg pro Stufe. Ab Welt 3 (Runde 11) werden die Helden außerdem 2 % pro Runde schneller. Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten.
 
 ## Dunkler Lord
 
