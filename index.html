@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-28.5', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.6', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -347,6 +347,7 @@ function resetThing(t) {
   if (t.type === 'block') { t.max = cm(stat(t).hp); t.hp = t.max; }
   if (t.type === 'cannon') { t.max = cm(120 * t.lvl); t.hp = t.max; }
   if (t.type === 'spikes') t.bodies = 0;
+  if (t.type === 'spring') { t.max = cm(80 * t.lvl); t.hp = t.max; }   // nur der Paladin schlägt Katapulte kaputt
   if (t.type === 'thwomp') { t.y = t.r * TS; t.state = 'up'; t.vy = 0; t.hits = new Set(); }
   if (t.type === 'cannon') t.t = Math.random() * stat(t).per;
 }
@@ -577,7 +578,7 @@ function colDanger(c, fr) {
   for (let r = fr + 1; r < ROWS; r++) if (isSolid(c, r)) { floor = true; break; }
   if (!floor) return 'gap';
   const t = thingAt(c, fr);
-  if (t && ((t.type === 'spikes' && !bridged(t)) || t.type === 'spring')) return 'trap';
+  if (t && ((t.type === 'spikes' && !bridged(t)) || (t.type === 'spring' && t.hp > 0))) return 'trap';
   return null;
 }
 const isDZ = d => d === 'gap' || d === 'trap';
@@ -595,9 +596,14 @@ function planJump(h, dt = 0) {
     if (h.x - h.w / 2 > x1) continue;
     if (h.def.boss) {
       // Der Paladin springt nie gegen eine Mauer: Fallen läuft er durch, eine Mauer hinter einer Lücke schlägt er vom Rand aus ein
-      let onlySpikes = true;
-      for (let cc = s; cc <= e; cc++) { const tt = thingAt(cc, fr); if (tt && tt.type !== 'spikes') onlySpikes = false; }
-      if (dz === 'trap' && onlySpikes && colDanger(e + 1, fr) !== 'gap') continue;   // Katapulte überspringt er weiter
+      // Katapulte: beim ersten Mal läuft er drauf und wird zurückgeworfen, danach schlägt er sie kaputt
+      let known = null;
+      for (let cc = s; cc <= e; cc++) { const tt = thingAt(cc, fr); if (tt && tt.type === 'spring' && tt.hp > 0 && h.knownSprings && h.knownSprings.has(tt)) known = known || tt; }
+      if (known) {
+        if (h.x + h.w / 2 >= known.c * TS - 3) { attackWall(h, dt, known.c); return true; }
+        return false;
+      }
+      if (dz === 'trap' && colDanger(e + 1, fr) !== 'gap') continue;
       if (colDanger(e + 1, fr) === 'wall' && e + 1 - c0 <= 3) {
         if (h.x + h.w / 2 >= x0 - 3) { attackWall(h, dt, e + 1); return true; }
         return false;
@@ -696,7 +702,7 @@ function attackWall(h, dt, col) {
   if (h.def.boss) {
     // Der Paladin schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg
     const hits = [];
-    for (let r = fr; r >= fr - 2; r--) { const t = thingAt(c, r); if (t && (t.type === 'block' || t.type === 'cannon') && t.hp > 0) hits.push(t); }
+    for (let r = fr; r >= fr - 2; r--) { const t = thingAt(c, r); if (t && (t.type === 'block' || t.type === 'cannon' || t.type === 'spring') && t.hp > 0) hits.push(t); }
     if (!hits.length) return false;
     h.attacking = true; h.slamCd = (h.slamCd ?? .3) - dt;
     if (h.slamCd <= 0) {
@@ -867,8 +873,14 @@ function updThings(dt) {
       case 'spikes': {
         // Stacheln töten jeden Helden bei Berührung, bis ihre Leichenkapazität voll ist.
         // Nur der Paladin übersteht sie: er bekommt einen Stich (höchstens einmal pro Sekunde) und laufend Schaden.
-        if (bridged(t)) break;
         for (const h of heroes) if (!h.dead && !h.def.float && overlapRect(h, x + 1, y + 8, 14, 8)) {
+          if (bridged(t)) {
+            // Der Paladin ist zu schwer für die Leichenbrücke: sie bricht ein, die Stacheln sind wieder scharf
+            if (!h.def.boss) continue;
+            t.bodies = stat(t).cap - 1; shake = Math.max(shake, .12);
+            for (let k = 0; k < 8; k++) parts.push({ x: x + rnd(2, 14), y: y + 12, vx: rnd(-30, 30), vy: rnd(-70, -20), life: rnd(.3, .6), max: .6, col: '#d9e2e8', g: 400 });
+            texts.push({ x: x + 8, y: y - 4, txt: 'Brücke bricht!', col: '#ff8a6a', life: 1.2, max: 1.2 });
+          }
           if (!h.def.boss) { spark(h.x, y + 10, '#e03a3a', 6); kill(h, 'spike'); }
           else {
             // Paladin: jede neue Stachel reißt 7 % seines Lebens auf, dazu laufender Schaden
@@ -918,7 +930,9 @@ function updThings(dt) {
         if (t.hp > 0 && (prev % st.per) > (t.t % st.per)) { bullets.push({ id: ++bulletId, x: x - 2, y: y + 8, vx: -70, dmg: st.dmg }); t.anim = .2; }
         break;
       case 'spring':
+        if (t.hp <= 0) break;
         if (t.cd <= 0) for (const h of heroes) if (!h.dead && !h.def.float && h.vy >= 0 && overlapRect(h, x + 2, y + 8, 12, 8)) {
+          if (h.def.boss && !(h.knownSprings && h.knownSprings.has(t))) { (h.knownSprings = h.knownSprings || new Set()).add(t); h.say = { txt: 'Ein Katapult? Das merke ich mir!', t: 2.2 }; }
           h.vy = -330; h.vx = -(st.push * TS) / (2 * 330 / G); h.kb = 2 * 330 / G; h.onGround = false; h.plans = {};
           t.cd = st.cd; t.anim = .3; break;
         }
@@ -1346,6 +1360,12 @@ function drawThing(t, layer, th) {
     } break;
     case 'spring': {
       if (layer) return;
+      if (t.hp <= 0) {   // zerschlagen: verbogene Feder, schiefe Platte
+        c.fillStyle = '#0a0d10'; rrect(x + 2, y + 14, 12, 2, 1); c.fill();
+        c.strokeStyle = 'rgba(214,224,230,.45)'; c.lineWidth = .8; c.beginPath(); c.moveTo(x + 4, y + 14); c.lineTo(x + 7, y + 12.5); c.lineTo(x + 9, y + 14); c.lineTo(x + 12, y + 12); c.stroke();
+        c.fillStyle = '#1a2026'; c.save(); c.translate(x + 8, y + 12.5); c.rotate(.35); rrect(-6, -1, 12, 2, 1); c.fill(); c.restore();
+        break;
+      }
       const up = t.anim > 0 ? t.anim / .3 : 0, top = y + 7 - up * 5;
       c.fillStyle = '#0a0d10'; rrect(x + 2, y + 14, 12, 2, 1); c.fill();
       c.strokeStyle = '#d6e0e6'; c.lineWidth = .9; c.beginPath();
@@ -1689,7 +1709,7 @@ function statText(type, lvl) {
     case 'firebar': return `${s.n} Kugeln · ${cm(s.dmg)} Schaden pro Treffer`;
     case 'thwomp': return `${cm(s.dmg)} Schaden pro Aufprall`;
     case 'cannon': return `${cm(lvl * 120)} Leben · ${cm(s.dmg)} Schaden · alle ${s.per}s`;
-    case 'spring': return `Wurf ${s.push} Felder · alle ${s.cd}s`;
+    case 'spring': return `Wurf ${s.push} Felder · alle ${s.cd}s · ${cm(80 * lvl)} Leben gegen den Paladin`;
     case 'crawler': case 'spiky': return `${cm(s.hp)} Leben · ${cm(s.dmg)} Schaden · Tempo ${s.spd}`;
     case 'bat': return `${cm(s.hp)} Leben · ${cm(s.dmg)} Schaden · Flughöhe ${s.rng}`;
   }

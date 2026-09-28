@@ -24,12 +24,12 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 |---|---|
 | Block | Mauern, Treppen, Plattformen. Helden springen drüber oder schlagen ihn kaputt |
 | Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
-| Stacheln | Flache Stachelgrube, ein halbes Feld tief, die Spitzen enden auf Bodenhöhe. Tödlich bei Berührung. Der Paladin übersteht sie, verliert aber an jeder neuen Stachel 7 % seines Lebens plus laufenden Schaden. Tote bleiben im Versuch liegen: die ersten rutschen zwischen die Stacheln, der letzte (Stufe 1: der 5., Stufe 2: der 7., Stufe 3: der 10.) bleibt oben liegen und bildet eine Brücke |
+| Stacheln | Flache Stachelgrube, ein halbes Feld tief, die Spitzen enden auf Bodenhöhe. Tödlich bei Berührung. Der Paladin übersteht sie, verliert aber an jeder neuen Stachel 7 % seines Lebens plus laufenden Schaden. Tote bleiben im Versuch liegen: die ersten rutschen zwischen die Stacheln, der letzte (Stufe 1: der 5., Stufe 2: der 7., Stufe 3: der 10.) bleibt oben liegen und bildet eine Brücke. Für den Paladin ist die Brücke zu schwer: sie bricht unter ihm ein, und die Stacheln sind wieder scharf |
 | Flammen | Feuersäule im Takt, drei Felder hoch |
 | Feuerrad | Kreisende Feuerkugeln, frei in der Luft |
 | Stampfer | Kracht herunter, sobald ein Held darunter ist |
 | Kanone | Schießt Kugeln nach links, zählt als Block |
-| Katapult | Schleudert Helden zurück |
+| Katapult | Schleudert Helden zurück. Der Paladin läuft beim ersten Mal drauf und fliegt zurück, danach merkt er es sich und zerschlägt es (wird jede Runde repariert) |
 | Kriecher | Kleiner Gegner, läuft hin und her, kann plattgesprungen werden |
 | Flatterer | Fliegt auf und ab |
 | Stachi | Stacheliger Gegner mit viel Leben, draufspringen verletzt |
