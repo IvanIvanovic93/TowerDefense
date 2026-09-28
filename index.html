@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen pro Stern.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-27.9', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.1', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -718,6 +718,7 @@ function updHero(h, dt, dyn) {
   h.attacking = false; h.waiting = false;
   if (h.slamT > 0) h.slamT -= dt;
   if (h.tpIn > 0) h.tpIn -= dt;
+  if (h.stingT > 0) h.stingT -= dt;
 
   if (d.float) {
     // Magier schweben knapp über dem höchsten Grund vor sich
@@ -822,9 +823,15 @@ function updThings(dt) {
     if (phase !== 'wave') continue;
     const st = stat(t), x = t.c * TS, y = t.r * TS;
     switch (t.type) {
-      case 'spikes':
-        for (const h of heroes) if (!h.dead && !h.def.float && overlapRect(h, x + 1, y + 8, 14, 8)) damage(h, st.dps * dt, 'spike');
+      case 'spikes': {
+        // Wer die Stacheln berührt, bekommt sofort einen Stich (eine halbe Sekunde Schaden), höchstens einmal pro Sekunde.
+        // So schützt Herumhüpfen auf den Stacheln nicht mehr vor Schaden.
+        for (const h of heroes) if (!h.dead && !h.def.float && overlapRect(h, x + 1, y + 8, 14, 8)) {
+          if (!(h.stingT > 0)) { damage(h, st.dps * .5, 'spike'); h.stingT = 1; spark(h.x, y + 10, '#e03a3a', 3); }
+          damage(h, st.dps * dt, 'spike');
+        }
         break;
+      }
       case 'flame':
         if (flameOn(t, t.t)) for (const h of heroes) if (!h.dead && overlapRect(h, x + 3, y - 2 * TS, 10, 3 * TS)) damage(h, st.dps * dt, 'fire');
         break;
@@ -1571,7 +1578,7 @@ function statText(type, lvl) {
   switch (type) {
     case 'block': return `${cm(s.hp)} Lebenspunkte`;
     case 'hole': return `Füllt sich nach ${s.cap} gefallenen Helden pro Reihe`;
-    case 'spikes': return `${cm(s.dps)} Schaden/s`;
+    case 'spikes': return `${cm(s.dps / 2)} Schaden sofort bei Berührung, dann ${cm(s.dps)} Schaden/s`;
     case 'flame': return `${cm(s.dps)} Schaden/s (${FLAME_ON}s an, ${(FLAME_P - FLAME_ON).toFixed(1)}s aus)`;
     case 'firebar': return `${s.n} Kugeln · ${cm(s.dmg)} Schaden pro Treffer`;
     case 'thwomp': return `${cm(s.dmg)} Schaden pro Aufprall`;

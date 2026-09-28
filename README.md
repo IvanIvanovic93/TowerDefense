@@ -24,7 +24,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 |---|---|
 | Block | Mauern, Treppen, Plattformen. Helden springen drüber oder schlagen ihn kaputt |
 | Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
-| Stacheln | Schaden am Boden |
+| Stacheln | Schaden am Boden. Jede Berührung sticht sofort (höchstens einmal pro Sekunde), Herumhüpfen schützt also nicht |
 | Flammen | Feuersäule im Takt, drei Felder hoch |
 | Feuerrad | Kreisende Feuerkugeln, frei in der Luft |
 | Stampfer | Kracht herunter, sobald ein Held darunter ist |
