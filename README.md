@@ -24,7 +24,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 |---|---|
 | Block | Mauern, Treppen, Plattformen. Helden springen drüber oder schlagen ihn kaputt |
 | Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
-| Stacheln | Schaden am Boden. Jede Berührung sticht sofort (höchstens einmal pro Sekunde), Herumhüpfen schützt also nicht |
+| Stacheln | Tödlich bei Berührung, nur der Paladin übersteht sie mit Schaden. Tote bleiben im Versuch liegen: die ersten rutschen zwischen die Stacheln, der letzte (Stufe 1: der 5., Stufe 2: der 7., Stufe 3: der 10.) bleibt oben liegen und bildet eine Brücke |
 | Flammen | Feuersäule im Takt, drei Felder hoch |
 | Feuerrad | Kreisende Feuerkugeln, frei in der Luft |
 | Stampfer | Kracht herunter, sobald ein Held darunter ist |
@@ -34,7 +34,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 | Flatterer | Fliegt auf und ab |
 | Stachi | Stacheliger Gegner mit viel Leben, draufspringen verletzt |
 
-Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
+Im Tunnel schlagen Helden erst die Decke über sich ein, bevor sie über eine Falle springen. Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
 
 Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Beispiel im Tunnel), kämpfen sich durch.
 
@@ -48,7 +48,7 @@ Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar ni
 - **Nicht bestanden:** Runde wiederholen, Gold bleibt. Ein Knappe bringt etwa 1 Gold, jeder weitere Versuch derselben Runde 30 % weniger pro Kill, mindestens aber 1 Gold pro 4 Kills (Runde 5 über 5 Versuche: etwa 85, 60, 42, 29, 21 Gold).
 - **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (Gold und Bauten bleiben) oder weiter zur nächsten Runde.
 - **Budget:** Jede Runde 150 + 20 pro Runde. Restgold verfällt, Bauten bleiben.
-- **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt mit leerem Feld und dreifachem Rundenbudget.
+- **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt mit leerem Feld und anderthalbfachem Rundenbudget.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
 ## Karte
@@ -57,7 +57,7 @@ Jede Welt besteht aus 5 Feldern, das fünfte ist die Bossburg. Nach jeder gescha
 
 ## Burg (Fortschritt über Durchgänge)
 
-Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, jeder geholte Stern wird zu einem Burgpunkt.
+Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, je 3 geholte Sterne werden zu einem Burgpunkt.
 
 Ausgebaut wird nur über den Burg-Knopf oben links neben dem Lord. Der Balken darunter zeigt, wie viele Burgpunkte bis zur nächsten Stufe fehlen. Im Spiel siehst du immer nur, was die nächste Stufe bringt, spätere Freischaltungen bleiben verborgen, gesperrte Bauteile tauchen in der Bauleiste gar nicht erst auf.
 
