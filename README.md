@@ -24,7 +24,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 |---|---|
 | Block | Mauern, Treppen, Plattformen. Helden springen drüber oder schlagen ihn kaputt |
 | Loch | Reißt den Boden auf. Gefallene Helden füllen es nach und nach |
-| Stacheln | Tödlich bei Berührung, nur der Paladin übersteht sie mit Schaden. Tote bleiben im Versuch liegen: die ersten rutschen zwischen die Stacheln, der letzte (Stufe 1: der 5., Stufe 2: der 7., Stufe 3: der 10.) bleibt oben liegen und bildet eine Brücke |
+| Stacheln | Flache Stachelgrube, ein halbes Feld tief, die Spitzen enden auf Bodenhöhe. Tödlich bei Berührung. Der Paladin übersteht sie, verliert aber an jeder neuen Stachel 7 % seines Lebens plus laufenden Schaden. Tote bleiben im Versuch liegen: die ersten rutschen zwischen die Stacheln, der letzte (Stufe 1: der 5., Stufe 2: der 7., Stufe 3: der 10.) bleibt oben liegen und bildet eine Brücke |
 | Flammen | Feuersäule im Takt, drei Felder hoch |
 | Feuerrad | Kreisende Feuerkugeln, frei in der Luft |
 | Stampfer | Kracht herunter, sobald ein Held darunter ist |

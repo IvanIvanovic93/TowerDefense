@@ -226,7 +226,7 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const TOOLS = {
   block:   { name: 'Block', cat: 'Gelände', cost: 15, place: 'air', col: '#c0703a', desc: 'Fester Block für Mauern, Treppen und Plattformen. Helden springen drüber oder schlagen ihn kaputt. Wird jede Runde repariert.', lv: [{ hp: 60 }, { hp: 150 }, { hp: 320 }] },
   hole:    { name: 'Loch', cat: 'Gelände', cost: 40, place: 'ground', col: '#000000', desc: 'Reißt den Boden auf. Wer reinfällt, ist weg. Gefallene Helden füllen das Loch nach und nach auf.', lv: [{ cap: 3 }, { cap: 5 }, { cap: 8 }] },
-  spikes:  { name: 'Stacheln', cat: 'Fallen', cost: 30, place: 'floor', col: '#c9c9d9', desc: 'Wer sie berührt, stirbt sofort. Nur der Paladin übersteht sie mit Schaden. Tote bleiben im Versuch liegen und rutschen zwischen die Stacheln. Ist das Feld voll, bleibt der letzte oben liegen und bildet eine Brücke.', lv: [{ dps: 40, cap: 5 }, { dps: 65, cap: 7 }, { dps: 100, cap: 10 }] },
+  spikes:  { name: 'Stacheln', cat: 'Fallen', cost: 30, place: 'floor', col: '#c9c9d9', desc: 'Wer sie berührt, stirbt sofort. Nur der Paladin übersteht sie mit Schaden. Tote bleiben im Versuch liegen und rutschen zwischen die Stacheln. Ist das Feld voll, bleibt der letzte oben liegen und bildet eine Brücke.', lv: [{ dps: 60, cap: 5 }, { dps: 95, cap: 7 }, { dps: 140, cap: 10 }] },
   flame:   { name: 'Flammen', cat: 'Fallen', cost: 70, place: 'floor', col: '#ff9a2e', desc: 'Feuersäule im Takt, drei Felder hoch. Trifft auch Springer.', lv: [{ dps: 70 }, { dps: 110 }, { dps: 160 }] },
   firebar: { name: 'Feuerrad', cat: 'Fallen', cost: 90, place: 'air', col: '#ffd83a', desc: 'Kreisende Feuerkugeln, frei in der Luft platzierbar.', lv: [{ n: 3, dmg: 22, spd: 1.8 }, { n: 4, dmg: 34, spd: 2.1 }, { n: 5, dmg: 50, spd: 2.4 }] },
   thwomp:  { name: 'Stampfer', cat: 'Fallen', cost: 100, place: 'air', col: '#7c7c94', desc: 'Kracht herunter, sobald ein Held darunter ist. Unten blockiert er den Weg.', lv: [{ dmg: 120 }, { dmg: 190 }, { dmg: 280 }] },
@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-28.4', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.5', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
@@ -595,7 +595,9 @@ function planJump(h, dt = 0) {
     if (h.x - h.w / 2 > x1) continue;
     if (h.def.boss) {
       // Der Paladin springt nie gegen eine Mauer: Fallen läuft er durch, eine Mauer hinter einer Lücke schlägt er vom Rand aus ein
-      if (dz === 'trap' && colDanger(e + 1, fr) !== 'gap') continue;
+      let onlySpikes = true;
+      for (let cc = s; cc <= e; cc++) { const tt = thingAt(cc, fr); if (tt && tt.type !== 'spikes') onlySpikes = false; }
+      if (dz === 'trap' && onlySpikes && colDanger(e + 1, fr) !== 'gap') continue;   // Katapulte überspringt er weiter
       if (colDanger(e + 1, fr) === 'wall' && e + 1 - c0 <= 3) {
         if (h.x + h.w / 2 >= x0 - 3) { attackWall(h, dt, e + 1); return true; }
         return false;
@@ -869,7 +871,14 @@ function updThings(dt) {
         for (const h of heroes) if (!h.dead && !h.def.float && overlapRect(h, x + 1, y + 8, 14, 8)) {
           if (!h.def.boss) { spark(h.x, y + 10, '#e03a3a', 6); kill(h, 'spike'); }
           else {
-            if (!(h.stingT > 0)) { damage(h, st.dps * .5, 'spike'); h.stingT = 1; spark(h.x, y + 10, '#e03a3a', 3); }
+            // Paladin: jede neue Stachel reißt 7 % seines Lebens auf, dazu laufender Schaden
+            h.spikesHit = h.spikesHit || new Set();
+            if (!h.spikesHit.has(t)) {
+              h.spikesHit.add(t);
+              const hit = h.max * .07 / (1 - (h.def.armor || 0));
+              damage(h, hit, 'spike'); h.flash = .12; spark(h.x, y + 14, '#e03a3a', 8);
+              texts.push({ x: h.x, y: h.y - 34, txt: '-' + Math.round(hit * (1 - (h.def.armor || 0)) * castleMul()), col: '#ff8a6a', life: .9, max: .9 });
+            }
             damage(h, st.dps * dt, 'spike');
           }
           if (h.dead) {   // Leiche bleibt liegen
@@ -1263,27 +1272,32 @@ function drawThing(t, layer, th) {
       if (t.lvl >= 3) glow(x + 8, y + 8, 5, th.glow, .5);
       if (t.hp < t.max) { c.strokeStyle = '#e8eef2'; c.globalAlpha = .7; c.lineWidth = .5; c.beginPath(); c.moveTo(x + 5, y + 2); c.lineTo(x + 7, y + 7); c.lineTo(x + 5.5, y + 10); if (t.hp < t.max * .5) { c.moveTo(x + 11, y + 5); c.lineTo(x + 9.5, y + 9); c.lineTo(x + 12, y + 13); } c.stroke(); c.globalAlpha = 1; }
     } break;
-    case 'spikes':
+    case 'spikes': {
       if (layer) return;
-      c.fillStyle = '#0a0d10'; rrect(x + 1, y + 13, 14, 3, 1); c.fill();
+      // Flache Stachelgrube: ein halbes Feld tief im Boden, die Spitzen enden auf Bodenhöhe
+      const gy = y + TS, d = 8;
+      c.fillStyle = '#020304'; c.fillRect(x + .5, gy, 15, d);
+      c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(x + .5, gy, 15, 1.5);
+      c.strokeStyle = th.rim; c.globalAlpha = .45; c.lineWidth = .5; c.beginPath(); c.moveTo(x + .5, gy); c.lineTo(x + .5, gy + d); c.moveTo(x + 15.5, gy); c.lineTo(x + 15.5, gy + d); c.stroke(); c.globalAlpha = 1;
+      const cap = stat(t).cap, n = Math.min(t.bodies || 0, cap), below = Math.min(n, cap - 1);
+      for (let k = 0; k < below; k++) {
+        const mx = x + 2.5 + ((k * 5.3) % 11), my = gy + d - 1.8 - Math.floor(k / 3) * 1.4;
+        c.fillStyle = '#d9e2e8'; c.beginPath(); c.ellipse(mx, my, 1.7, 1.4, (k % 3) * .6, 0, 7); c.fill();
+        c.fillStyle = '#0c0f13'; c.fillRect(mx - .8, my - .4, .6, .8); c.fillRect(mx + .2, my - .4, .6, .8);
+      }
       c.fillStyle = t.lvl === 3 ? '#f2d6c8' : '#d6e0e6';
-      for (let k = 0; k < 5; k++) { const sx = x + 2 + k * 3, h = 7 + (k % 2) * 2 + t.lvl; c.beginPath(); c.moveTo(sx, y + 13.5); c.quadraticCurveTo(sx + .3, y + 13 - h * .6, sx + 1.4 + (k % 2 ? .6 : -.4), y + 13 - h); c.quadraticCurveTo(sx + 2, y + 13 - h * .5, sx + 2.6, y + 13.5); c.fill(); }
-      {
-        // Leichen: erst zwischen die Stacheln gerutscht, die letzte liegt oben quer als Brücke
-        const cap = stat(t).cap, n = Math.min(t.bodies || 0, cap), below = Math.min(n, cap - 1);
-        for (let k = 0; k < below; k++) {
-          const mx = x + 2.5 + ((k * 5.3) % 11), my = y + 12 - Math.floor(k / 3) * 1.6;
-          c.fillStyle = '#d9e2e8'; c.beginPath(); c.ellipse(mx, my, 1.8, 1.5, (k % 3) * .6, 0, 7); c.fill();
-          c.fillStyle = '#0c0f13'; c.fillRect(mx - .8, my - .4, .6, .8); c.fillRect(mx + .2, my - .4, .6, .8);
-        }
-        if (n >= cap) {
-          c.fillStyle = '#10161b'; rrect(x - 1, y + 3, 18, 4.5, 2); c.fill();
-          c.strokeStyle = th.rim; c.globalAlpha = .5; c.lineWidth = .5; c.stroke(); c.globalAlpha = 1;
-          c.fillStyle = '#dfeaf0'; c.beginPath(); c.ellipse(x + 15, y + 4.5, 2.6, 2.3, .3, 0, 7); c.fill();
-          c.fillStyle = '#0c0f13'; c.fillRect(x + 14.4, y + 4, .7, 1.1); c.fillRect(x + 15.6, y + 4, .7, 1.1);
-        }
+      for (let k = 0; k < 5; k++) {
+        const sx = x + 1.5 + k * 2.8, h = d - .3 - (k % 2) * 1.2;
+        c.beginPath(); c.moveTo(sx, gy + d); c.quadraticCurveTo(sx + .3, gy + d - h * .6, sx + 1.2 + (k % 2 ? .5 : -.3), gy + d - h); c.quadraticCurveTo(sx + 1.8, gy + d - h * .5, sx + 2.4, gy + d); c.fill();
+      }
+      if (n >= cap) {
+        c.fillStyle = '#10161b'; rrect(x - 1, gy - 2.5, 18, 4.5, 2); c.fill();
+        c.strokeStyle = th.rim; c.globalAlpha = .5; c.lineWidth = .5; c.stroke(); c.globalAlpha = 1;
+        c.fillStyle = '#dfeaf0'; c.beginPath(); c.ellipse(x + 15, gy - 1, 2.6, 2.3, .3, 0, 7); c.fill();
+        c.fillStyle = '#0c0f13'; c.fillRect(x + 14.4, gy - 1.5, .7, 1.1); c.fillRect(x + 15.6, gy - 1.5, .7, 1.1);
       }
       break;
+    }
     case 'flame': {
       if (!layer) { c.fillStyle = '#0a0d10'; rrect(x + 2, y + 10, 12, 6, 1.5); c.fill(); c.fillStyle = '#ff8a3a'; c.globalAlpha = .6 + .4 * Math.sin(time * 5); c.fillRect(x + 4, y + 11, 8, .8); c.globalAlpha = 1; return; }
       const ph = t.t % FLAME_P, on = flameOn(t, t.t);
@@ -1562,7 +1576,8 @@ function iconFor(type) {
   const ic = document.createElement('canvas'); ic.width = ic.height = 96;
   const saved = c; c = ic.getContext('2d');
   const th = THEMES[0], k = 96 / 22;
-  c.setTransform(k, 0, 0, k, 3 * k, (type === 'flame' ? 8 : 3) * k);
+  c.setTransform(k, 0, 0, k, 3 * k, (type === 'flame' ? 8 : type === 'spikes' ? -7 : 3) * k);
+  if (type === 'spikes') { c.fillStyle = th.ground; c.fillRect(-4, 16, 24, 10); c.fillStyle = th.rim; c.fillRect(-4, 16, 24, .8); }
   const fake = makeThing(type, 0, 0, 1, 0, false); fake.t = type === 'flame' ? .5 : .6; fake.y = 0;
   if (type === 'hole') { c.fillStyle = th.ground; c.fillRect(-4, 6, 24, 12); c.fillStyle = th.rim; c.fillRect(-4, 6, 24, .8); c.fillStyle = '#000'; c.fillRect(4, 6, 8, 12); }
   else if (TOOLS[type].minion) drawMinion({ type, x: 8, y: type === 'bat' ? 8 : 15, t: .3, dir: -1, alive: true });
@@ -1669,7 +1684,7 @@ function statText(type, lvl) {
   switch (type) {
     case 'block': return `${cm(s.hp)} Lebenspunkte`;
     case 'hole': return `Füllt sich nach ${s.cap} gefallenen Helden pro Reihe`;
-    case 'spikes': return `Tödlich bei Berührung · Brücke nach ${s.cap} Toten · Paladin: ${cm(s.dps)} Schaden/s`;
+    case 'spikes': return `Tödlich bei Berührung · Brücke nach ${s.cap} Toten · Paladin: ${cm(7)} % Leben pro Stachel und ${cm(s.dps)} Schaden/s`;
     case 'flame': return `${cm(s.dps)} Schaden/s (${FLAME_ON}s an, ${(FLAME_P - FLAME_ON).toFixed(1)}s aus)`;
     case 'firebar': return `${s.n} Kugeln · ${cm(s.dmg)} Schaden pro Treffer`;
     case 'thwomp': return `${cm(s.dmg)} Schaden pro Aufprall`;
