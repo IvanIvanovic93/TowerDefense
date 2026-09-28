@@ -251,11 +251,11 @@ const HT = {
 // ================= Burg (bleibt über alle Durchgänge) =================
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
-// (Spielstand, Lord, Burg, Neu-Markierungen). Nur Einführung und Sortierung bleiben erhalten.
-const DATA_VERSION = '2026-09-28.7', VERSION_KEY = 'fallenfuerst_version';
+// (Spielstand, Lord, Burg, Neu-Markierungen, Einführung). Nur die Sortierung bleibt erhalten.
+const DATA_VERSION = '2026-09-28.8', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
-    ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1'].forEach(k => localStorage.removeItem(k));
+    ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1', 'fallenfuerst_intro_v1'].forEach(k => localStorage.removeItem(k));
     localStorage.setItem(VERSION_KEY, DATA_VERSION);
   }
 } catch (e) {}
@@ -290,6 +290,8 @@ const CASTLE_LAYOUT = [
 ];
 const schergenCount = () => UNLOCKS.filter(u => u.scherge && u.lvl <= META.lvl).length;
 const runStars = () => Object.values(S.stars).reduce((a, b) => a + b, 0);
+// Burg zurücksetzen gibt es erst, wenn man nach Welt 1 dieselbe Runde mindestens zweimal verloren hat
+const canReset = () => S.wave > 5 && (S.fails || 0) >= 2 && runPoints() > 0;
 const runPoints = () => Math.floor(runStars() / 3);   // je 3 Sterne ein Burgpunkt
 function unlockText(u) {
   const parts = [];
@@ -447,7 +449,7 @@ let preview = null;
 function planned(w) { if (!preview || preview.w !== w) preview = { w, list: waveList(w) }; return preview.list; }
 
 function starsFor(leaks, total) { const r = leaks / total; return leaks === 0 ? 3 : r <= .05 ? 2 : r < .1 ? 1 : 0; }
-const baseBudget = w => 150 + (w - 1) * 20;
+const baseBudget = w => 100 + (w - 1) * 12;
 // Kill-Gold: ein Drittel des Grundwerts, jeder weitere Versuch derselben Runde 30 % weniger, mindestens 1 Gold pro 4 Kills
 const killMul = () => Math.pow(.7, S.retry || 0);
 const killValue = h => Math.max(.25, h.def.gold * (1 + (S.wave - 1) * .025) * .35 * killMul());
@@ -464,6 +466,7 @@ function startWave() {
   closePopup(); selType = null; refreshPalette();
   phase = 'wave';
   introStep('start1', 'throw'); introStep('start', null);
+  if (S.wave === 1 && !intro) { intro = 'throw'; placeCoach(); setTimeout(() => { if (intro === 'throw') { intro = 'watch'; placeCoach(); } }, 12000); }
   hpMul = waveHpMul(S.wave);
   const list = planned(S.wave);
   spawnQ = []; let t = 0;
@@ -479,7 +482,7 @@ function startWave() {
 
 function advance(done) {
   if (isBoss(done)) S.things = []; // nach dem Boss: Feld räumen, neue Welt
-  S.wave++; S.retry = 0; S.goldFrac = 0; S.gold = budget(S.wave);
+  S.wave++; S.retry = 0; S.fails = 0; S.goldFrac = 0; S.gold = budget(S.wave);
   applyLength(S.wave);
 }
 function endWave() {
@@ -490,7 +493,7 @@ function endWave() {
   if (stars > 0 && isBoss(done) && done > lord.lastBoss) { lord.earned++; lord.lastBoss = done; }
   // Perfekt: direkt weiter. Bestanden, aber nicht perfekt: der Spieler entscheidet im Ergebnisfenster.
   if (stars === 3) advance(done);
-  else if (stars === 0) S.retry = (S.retry || 0) + 1;
+  else if (stars === 0) { S.retry = (S.retry || 0) + 1; S.fails = (S.fails || 0) + 1; }
   rebuildTM();
   resetLevelRuntime();
   heroes = []; stones = [];
@@ -538,6 +541,7 @@ function knock(h, dir = -1) { h.kb = .35; h.vx = 50 * dir; h.vy = -150; h.onGrou
 function kill(h, src) {
   if (h.dead) return;
   h.dead = true;
+  if (W && (src === 'spike' || src === 'pit')) (W.known = W.known || new Set()).add(Math.floor(h.x / TS));
   // Bruchteile sammeln, damit auch 1 Gold pro 4 Kills genau ankommt
   S.goldFrac = (S.goldFrac || 0) + killValue(h);
   const g = Math.floor(S.goldFrac); S.goldFrac -= g;
@@ -618,7 +622,8 @@ function planJump(h, dt = 0) {
     const pk = s + ':' + fr;
     let p = h.plans[pk];
     if (!p) {
-      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .35 : 0));
+      let known = false; for (let cc = s; cc <= e; cc++) if (W && W.known && W.known.has(cc)) known = true;   // hier sind schon Kameraden gestorben
+      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .35 : 0) + (known ? .4 : 0));
       const err = (Math.random() - .5) * (1 - h.skill) * 18;
       p = h.plans[pk] = { jump: see, tx: x0 - Math.max(2, (R - (x1 - x0)) / 2) + err, done: false };
     }
@@ -1972,7 +1977,7 @@ function showMenu(resume) {
   const wasPaused = resume === undefined ? paused : resume; paused = true;
   showCard(`<div class="hrow"><h2>Pause</h2>${infoBtn('mInfo')}</div>
     <div class="res"><span>Runde</span><b>${S.wave}</b><span>Welt</span><b>${themeFor(S.wave).name}</b><span>Helden getötet (gesamt)</span><b>${S.kills}</b><span>Durchgekommen (gesamt)</span><b>${S.leaks}</b><span>Sterne</span><b>${Object.values(S.stars).reduce((a, b) => a + b, 0)} / ${(S.wave - 1) * 3}</b></div>
-    <div class="row"><button class="btn pri" id="mRes">Weiter</button><button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button></div>
+    <div class="row"><button class="btn pri" id="mRes">Weiter</button>${canReset() ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}</div>
     <div class="row"><button class="btn" id="mMap">Karte</button><button class="btn alt" id="mNew">Alles löschen<small>auch Burgstufe</small></button></div>`);
   $('mMap').onclick = () => { hideCard(); showMap(S.wave, S.wave, () => showMenu(wasPaused), 'Zurück'); };
   $('mInfo').onclick = () => showInfo('So wird gespielt', HELP, () => showMenu(wasPaused));
@@ -2007,7 +2012,7 @@ function showResult(w, stars) {
     <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Lordpunkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
       ? `<button class="btn" id="mRetry">Nochmal<small>Gold bleibt, Kills 30 % weniger Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Budget ${budget(nextW)}</small></button>`
-      : `${!passed && runPoints() > 0 && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: je 3 Sterne werden zu einem Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && runPoints() > 0 ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
+      : `${!passed && canReset() && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: je 3 Sterne werden zu einem Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && canReset() ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
   if (choice) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; save(); hideCard(); updateUI(); };
     $('mNext').onclick = () => {

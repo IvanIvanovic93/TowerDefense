@@ -12,7 +12,7 @@ Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per
 
 ## Erster Start
 
-Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, der den Lord verspottet. Es gibt kein Baugold: Man muss ihn mit Steinen abwerfen, die Einführung zeigt wie. Danach kehrt er als Geist zurück, droht mit seiner ganzen Armee und verschwindet. In Runde 2 führt die Einführung durch die ersten zwei Stacheln, dann kommen 6 unerfahrene Knappen. Runde 3 bringt 12, Runde 4 30 und Runde 5 48 Helden plus Boss. Das Gold ist in Welt 1 knapp (60 bis 120 pro Runde). Die Einführung lässt sich jederzeit überspringen und erscheint nur einmal. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
+Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, der den Lord verspottet. Es gibt kein Baugold: Man muss ihn mit Steinen abwerfen, die Einführung zeigt wie. Danach kehrt er als Geist zurück, droht mit seiner ganzen Armee und verschwindet. In Runde 2 führt die Einführung durch die ersten zwei Stacheln, dann kommen 6 unerfahrene Knappen. Runde 3 bringt 12, Runde 4 30 und Runde 5 48 Helden plus Boss. Das Gold ist in Welt 1 knapp (60 bis 120 pro Runde). Die Einführung lässt sich jederzeit überspringen und erscheint nur einmal (nach einem Update wieder). Den Hinweis zum Steinwurf gibt es in jeder Runde 1. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
 
 ## Grafik
 
@@ -34,7 +34,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 | Flatterer | Fliegt auf und ab |
 | Stachi | Stacheliger Gegner mit viel Leben, draufspringen verletzt |
 
-Im Tunnel schlagen Helden erst die Decke über sich ein, bevor sie über eine Falle springen. Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
+Im Tunnel schlagen Helden die Decke schon vor der ersten erkannten Falle ein. Wo Kameraden gestorben sind, erkennen die nachfolgenden Helden die Falle viel eher. Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
 
 Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Beispiel im Tunnel), kämpfen sich durch.
 
@@ -47,7 +47,7 @@ Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar ni
 - **Sterne:** Bestanden unter 10 % Durchbrüchen (Bronze), höchstens 5 % Silber, keiner Gold.
 - **Nicht bestanden:** Runde wiederholen, Gold bleibt. Ein Knappe bringt etwa 1 Gold, jeder weitere Versuch derselben Runde 30 % weniger pro Kill, mindestens aber 1 Gold pro 4 Kills (Runde 5 über 5 Versuche: etwa 85, 60, 42, 29, 21 Gold).
 - **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (Gold und Bauten bleiben) oder weiter zur nächsten Runde.
-- **Budget:** Welt 1: 0, 60, 80, 100, 120 Gold. Danach jede Runde 150 + 20 pro Runde. Restgold verfällt, Bauten bleiben innerhalb einer Welt stehen.
+- **Budget:** Welt 1: 0, 60, 80, 100, 120 Gold. Danach jede Runde 100 + 12 pro Runde. Restgold verfällt, Bauten bleiben innerhalb einer Welt stehen.
 - **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt mit leerem Feld; ihr Startbudget ist 60 % dessen, was die vorige Welt insgesamt hatte.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
@@ -57,7 +57,7 @@ Jede Welt besteht aus 5 Feldern, das fünfte ist die Bossburg. Nach jeder gescha
 
 ## Burg (Fortschritt über Durchgänge)
 
-Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder nach einer verlorenen Runde): der Durchgang startet neu bei Runde 1, je 3 geholte Sterne werden zu einem Burgpunkt.
+Zu Beginn sind nur Block, Loch und Stacheln frei. Kommst du nicht mehr weiter, setzt du die Burg zurück (Menü oder Rundenergebnis; der Knopf erscheint erst nach Welt 1, wenn man dieselbe Runde mindestens zweimal verloren hat): der Durchgang startet neu bei Runde 1, je 3 geholte Sterne werden zu einem Burgpunkt.
 
 Ausgebaut wird nur über den Burg-Knopf oben links neben dem Lord. Der Balken darunter zeigt, wie viele Burgpunkte bis zur nächsten Stufe fehlen. Im Spiel siehst du immer nur, was die nächste Stufe bringt, spätere Freischaltungen bleiben verborgen, gesperrte Bauteile tauchen in der Bauleiste gar nicht erst auf.
 
