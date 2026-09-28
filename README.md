@@ -45,8 +45,8 @@ Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar ni
 ## Regeln
 
 - **Sterne:** Bestanden unter 10 % Durchbrüchen (Bronze), höchstens 5 % Silber, keiner Gold.
-- **Nicht bestanden:** Runde wiederholen, Gold und Bauten bleiben. Jeder weitere Versuch derselben Runde bringt 30 % weniger Gold pro Kill, mindestens aber 1 Gold pro 4 Kills.
-- **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne oder weiter zur nächsten Runde.
+- **Nicht bestanden:** Runde wiederholen, Gold und Bauten bleiben, Kills bringen den vollen Wert.
+- **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (jede freiwillige Wiederholung bringt 30 % weniger Gold pro Kill, mindestens 1 Gold pro 4 Kills) oder weiter zur nächsten Runde.
 - **Gold:** Es gibt kein festes Rundenbudget. Gold gibt es nur für getötete Helden: 1 pro Held, 2 für Ritter, Klerikerin und Magier, 10 für den Paladin. Es bleibt von Runde zu Runde erhalten. Einmalig gibt es zu Runde 2 eine Kriegskasse von 120 Gold für die ersten Stacheln.
 - **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt: Das Feld wird geräumt, den vollen Wert der Bauten bekommt man als Gold zurück.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
