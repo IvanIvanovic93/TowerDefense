@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen, Einführung). Nur die Sortierung bleibt erhalten.
-const DATA_VERSION = '2026-09-28.12', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.13', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1', 'fallenfuerst_intro_v1'].forEach(k => localStorage.removeItem(k));
@@ -326,16 +326,28 @@ const key = (c, r) => c * 16 + r;
 const thingAt = (c, r) => TM.get(key(c, r));
 function rebuildTM() { TM = new Map(); for (const t of S.things) TM.set(key(t.c, t.r), t); }
 
-function newState() { return { goldFrac: 0, gold: budget(1), wave: 1, things: [], kills: 0, leaks: 0, stars: {}, retry: 0, best: 0 }; }
+// Jede Welt beginnt mit eigener Landschaft: feste Felsen und Spalten, die niemandem gehören.
+// Spalten relativ zum Streckenanfang, damit sie auch auf das kurze Feld der ersten Runde passen.
+const WORLD_LAYOUTS = [
+  [['block', 7, 6], ['block', 8, 6], ['block', 8, 5], ['block', 9, 6], ['block', 21, 6]],                                    // Nebelwald: Hügel, Felsbrocken
+  [['block', 6, 6], ['block', 6, 5], ['block', 7, 6], ['block', 12, 3], ['block', 13, 3], ['block', 14, 4], ['hole', 20, 7]], // Kristallgrotte: Stufe, hängende Kristalle, Spalte
+  [['hole', 9, 7], ['block', 13, 6], ['block', 14, 6], ['block', 14, 5], ['block', 18, 4], ['block', 19, 4], ['hole', 22, 7]], // Aschenburg: Lavaspalten, Vorsprung, Felsgrat
+];
+function worldLayout(w) {
+  return WORLD_LAYOUTS[Math.floor((w - 1) / 5) % WORLD_LAYOUTS.length].map(([type, c, r]) => {
+    const t = makeThing(type, c, r, type === 'block' ? 2 : 1, 0, false); t.fixed = true; return t;
+  });
+}
+function newState() { return { goldFrac: 0, gold: budget(1), wave: 1, things: worldLayout(1), kills: 0, leaks: 0, stars: {}, retry: 0, best: 0 }; }
 function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ ...S, things: S.things.map(t => ({ type: t.type, c: t.c, r: t.r, lvl: t.lvl, spent: t.spent })) })); } catch (e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ ...S, things: S.things.map(t => ({ type: t.type, c: t.c, r: t.r, lvl: t.lvl, spent: t.spent, fixed: t.fixed ? 1 : 0 })) })); } catch (e) {}
 }
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY));
     if (!d) return null;
     const s = { ...newState(), ...d, stars: d.stars || {} };
-    s.things = (d.things || []).filter(t => TOOLS[t.type]).map(t => makeThing(t.type, t.c, t.r, t.lvl, t.spent, false));
+    s.things = (d.things || []).filter(t => TOOLS[t.type]).map(t => { const m = makeThing(t.type, t.c, t.r, t.lvl, t.spent, false); m.fixed = !!t.fixed; return m; });
     return s;
   } catch (e) { return null; }
 }
@@ -479,7 +491,7 @@ function startWave() {
 
 function advance(done) {
   // nach dem Boss: Feld räumen, der volle Wert der Bauten kommt zurück, damit man die neue Welt neu aufbauen kann
-  if (isBoss(done)) { S.gold += S.things.reduce((a, t) => a + t.spent, 0); S.things = []; }
+  if (isBoss(done)) { S.gold += S.things.reduce((a, t) => a + t.spent, 0); S.things = worldLayout(done + 1); }
   S.wave++; S.retry = 0; S.vol = 0; S.fails = 0; S.gold += budget(S.wave);
   applyLength(S.wave);
 }
@@ -621,8 +633,10 @@ function planJump(h, dt = 0) {
     let p = h.plans[pk];
     if (!p) {
       let known = false; for (let cc = s; cc <= e; cc++) if (W && W.known && W.known.has(cc)) known = true;   // hier sind schon Kameraden gestorben
+      // Sichtlinie: hängt zwischen Held und Falle (oder über ihr) ein Block oder Fels auf Augenhöhe, sieht er sie schlechter
+      let hidden = false; for (let cc = c0 + 1; cc <= s; cc++) if (isSolid(cc, fr - 1) || isSolid(cc, fr - 2)) hidden = true;
       // Löcher sieht man leichter; aus dem Tod von Kameraden lernen sie anfangs wenig, später viel
-      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .2 : 0) + (known ? Math.min(.4, .1 + S.wave * .012) : 0));
+      const see = Math.random() < Math.min(.97, h.skill + .1 + (dz === 'gap' ? .2 : 0) + (known ? Math.min(.4, .1 + S.wave * .012) : 0)) * (hidden ? .4 : 1);
       const err = (Math.random() - .5) * (1 - h.skill) * 18;
       p = h.plans[pk] = { jump: see, tx: x0 - Math.max(2, (R - (x1 - x0)) / 2) + err, done: false };
     }
@@ -1288,6 +1302,16 @@ function drawThing(t, layer, th) {
       if (layer) return;
       if (t.hp <= 0) { c.fillStyle = th.block; for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(x + 3 + k * 3.5, y + 14.5, 1.6, 0, 7); c.fill(); } return; }
       const j = t.anim > 0 ? (Math.random() - .5) * .8 : 0;
+      if (t.fixed) {   // natürlicher Fels: unregelmäßig, dunkel, Moos obenauf
+        const sd = (t.c * 7 + t.r * 3) % 5;
+        c.fillStyle = th.far; c.beginPath();
+        c.moveTo(x + j, y + 16); c.lineTo(x + .5 + j, y + 4 + sd * .4); c.quadraticCurveTo(x + 3 + j, y + .5, x + 7 + j, y + 1 + sd * .3); c.quadraticCurveTo(x + 12 + j, y - .2, x + 15.5 + j, y + 3 + sd * .3); c.lineTo(x + 16 + j, y + 16); c.fill();
+        c.strokeStyle = th.rim; c.globalAlpha = .45; c.lineWidth = .6; c.beginPath(); c.moveTo(x + .5 + j, y + 4 + sd * .4); c.quadraticCurveTo(x + 3 + j, y + .5, x + 7 + j, y + 1 + sd * .3); c.quadraticCurveTo(x + 12 + j, y - .2, x + 15.5 + j, y + 3 + sd * .3); c.stroke();
+        c.globalAlpha = .2; c.beginPath(); c.moveTo(x + 4, y + 8); c.lineTo(x + 8, y + 10); c.moveTo(x + 10, y + 6); c.lineTo(x + 12, y + 12); c.stroke(); c.globalAlpha = 1;
+        c.fillStyle = th.moss; c.globalAlpha = .7; c.beginPath(); c.ellipse(x + 6 + j, y + 1.5, 4, 1, 0, 0, 7); c.ellipse(x + 11 + j, y + 1.2, 2.5, .8, 0, 0, 7); c.fill(); c.globalAlpha = 1;
+        if (t.hp < t.max * .5) { c.strokeStyle = '#e8eef2'; c.globalAlpha = .5; c.lineWidth = .5; c.beginPath(); c.moveTo(x + 6, y + 2); c.lineTo(x + 8, y + 8); c.lineTo(x + 6.5, y + 12); c.stroke(); c.globalAlpha = 1; }
+        return;
+      }
       c.fillStyle = th.block; rrect(x + .5 + j, y + .5, 15, 15, 2.5); c.fill();
       c.strokeStyle = th.blockRim; c.globalAlpha = .7; c.lineWidth = .7;
       c.beginPath(); c.moveTo(x + 1.5 + j, y + 12); c.lineTo(x + 1.5 + j, y + 3); c.quadraticCurveTo(x + 1.5 + j, y + 1.5, x + 3 + j, y + 1.5); c.lineTo(x + 13 + j, y + 1.5); c.stroke();
@@ -1736,6 +1760,14 @@ function showInfo(title, html, back) {
 
 function openPopup(t) {
   selThing = t;
+  if (t.fixed) {   // Landschaft: nur Info, nicht abreißbar
+    const p = $('popup');
+    p.innerHTML = `<div class="ph"><b>${t.type === 'hole' ? 'Spalte' : 'Fels'}</b><span class="sp"></span><button class="btn alt x" id="pX" aria-label="Schließen">${ico('x')}</button></div>
+      <div class="pb"><p class="muted">Teil der Landschaft dieser Welt. ${t.type === 'hole' ? 'Kann nicht zugeschüttet werden.' : 'Kann nicht abgerissen werden, Helden können ihn aber einschlagen.'}</p></div>`;
+    p.classList.remove('hide');
+    $('pX').onclick = closePopup; $('pX').onpointerup = e => { e.preventDefault(); closePopup(); };
+    return;
+  }
   const d = TOOLS[t.type], p = $('popup'), build = phase === 'build', canUp = t.lvl < 3, locked = canUp && t.lvl >= maxUp();
   p.innerHTML = `<div class="ph"><b>${d.name}</b><span class="stars">${ico('star').repeat(t.lvl)}${ico('stard').repeat(3 - t.lvl)}</span>
       <span class="sp"></span>${infoBtn('pInfo')}<button class="btn alt x" id="pX" aria-label="Schließen">${ico('x')}</button></div>
@@ -1830,7 +1862,7 @@ const INTRO_TEXT = {
 };
 // Geführter Einstieg: Runde 1 nur Steine werfen, in Runde 2 die ersten Stacheln nach Anleitung
 function startIntro() {
-  if (introDone() || S.things.length || S.wave > 2) { intro = null; return; }
+  if (introDone() || S.things.some(t => !t.fixed) || S.wave > 2) { intro = null; return; }
   if (S.wave === 1) intro = 'start1';
   else {
     intro = 'pick';
@@ -1884,7 +1916,7 @@ const HELP = `<ul>
   <li>Du startest mit Block, Loch und Stacheln. Kommst du nicht weiter, setzt du die Burg zurück: je 3 Sterne des Durchgangs werden zu einem Burgpunkt. Damit baust du die Burg aus und schaltest neue Fallen, Kreaturen und Schergen frei.</li>
 </ul>`;
 function showStart() {
-  const saved = load(), hasRun = (!!saved && (saved.wave > 1 || saved.things.length > 0)) || META.lvl > 1 || META.pts > 0 || META.runs > 0;
+  const saved = load(), hasRun = (!!saved && (saved.wave > 1 || saved.things.some(t => !t.fixed))) || META.lvl > 1 || META.pts > 0 || META.runs > 0;
   showCard(`<div class="hrow"><h1>Fallen<span>fürst</span></h1>${infoBtn('mInfo')}</div>
     <p class="lede">Du bist der Dunkle Lord. Baue die Strecke, an der eine ganze Horde Helden scheitert, bevor sie dein Schloss erreicht.</p>
     <div class="row">

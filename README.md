@@ -18,6 +18,10 @@ Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, d
 
 Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschächte, schwebende Leuchtpunkte, dunkle Figuren mit hellen Masken, glühende Augen und Feuer. Oberfläche mit Cinzel und Cormorant Garamond, feinen Linien und Ornamenten. Drei Welten wechseln nach jedem Boss: Nebelwald, Kristallgrotte, Aschenburg (mit Lava).
 
+## Welten
+
+Jede Welt (fünf Runden) beginnt mit eigener Landschaft, die niemandem gehört und nicht abgerissen werden kann: im Nebelwald ein kleiner Hügel und ein Felsbrocken, in der Kristallgrotte eine Felsstufe, hängende Kristallfelsen und eine schmale Spalte, in der Aschenburg zwei Lavaspalten, ein Felsvorsprung und ein schwebender Felsgrat. Helden können Felsen wie Blöcke einschlagen.
+
 ## Bauteile
 
 | Bauteil | Wirkung |
@@ -34,7 +38,7 @@ Düstere, gemalte Optik: Nebel- und Silhouetten-Ebenen mit Parallax, Lichtschäc
 | Flatterer | Fliegt auf und ab |
 | Stachi | Stacheliger Gegner mit viel Leben, draufspringen verletzt |
 
-Im Tunnel schlagen Helden die Decke schon vor der ersten erkannten Falle ein. Wo Kameraden gestorben sind, erkennen die nachfolgenden Helden die Falle eher, anfangs nur wenig, später deutlich. Knappen erkennen eine Falle in Welt 1 nur mit 5 bis 20 %, Löcher etwas besser; erst mit den Runden werden sie erfahrener (Runde 10: 40 %, Runde 20: 70 %). Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
+Im Tunnel schlagen Helden die Decke schon vor der ersten erkannten Falle ein. Hängt zwischen Held und Falle (oder über ihr) ein Block oder Fels auf Augenhöhe, sieht er sie schlechter (Sichtlinie). Wo Kameraden gestorben sind, erkennen die nachfolgenden Helden die Falle eher, anfangs nur wenig, später deutlich. Knappen erkennen eine Falle in Welt 1 nur mit 5 bis 20 %, Löcher etwas besser; erst mit den Runden werden sie erfahrener (Runde 10: 40 %, Runde 20: 70 %). Hängt ein Held 5 Sekunden fest, teleportiert er sich ein Stück weiter (violetter Riss an Start und Ziel).
 
 Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Beispiel im Tunnel), kämpfen sich durch.
 
