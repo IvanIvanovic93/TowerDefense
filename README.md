@@ -12,7 +12,7 @@ Reines HTML5/Canvas ohne Build-Schritt. `index.html` im Browser öffnen oder per
 
 ## Erster Start
 
-Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, der den Lord verspottet. Es gibt kein Baugold: Man muss ihn mit Steinen abwerfen, die Einführung zeigt wie. Danach kehrt er als Geist zurück, droht mit seiner ganzen Armee und verschwindet. In Runde 2 führt die Einführung durch die ersten zwei Stacheln, dann kommen 6 unerfahrene Knappen. Runde 3 bringt 12, Runde 4 30 und Runde 5 48 Helden plus Boss. Das Gold ist in Welt 1 knapp (60 bis 120 pro Runde). Die Einführung lässt sich jederzeit überspringen und erscheint nur einmal (nach einem Update wieder). Den Hinweis zum Steinwurf gibt es in jeder Runde 1. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
+Welt 1 ist ein geführter Einstieg. In Runde 1 kommt nur ein einzelner Knappe, der den Lord verspottet. Es gibt kein Baugold: Man muss ihn mit Steinen abwerfen, die Einführung zeigt wie. Danach kehrt er als Geist zurück, droht mit seiner ganzen Armee und verschwindet. In Runde 2 führt die Einführung durch die ersten zwei Stacheln, dann kommen 6 unerfahrene Knappen. Runde 3 bringt 8, Runde 4 10 und Runde 5 13 Helden plus Boss. Zu Runde 2 gibt es 120 Gold Kriegskasse, danach nur noch Gold aus Kills. Die Einführung lässt sich jederzeit überspringen und erscheint nur einmal (nach einem Update wieder). Den Hinweis zum Steinwurf gibt es in jeder Runde 1. Später markiert ein "Neu"-Abzeichen frisch freigeschaltete Bauteile.
 
 ## Grafik
 
@@ -45,10 +45,10 @@ Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar ni
 ## Regeln
 
 - **Sterne:** Bestanden unter 10 % Durchbrüchen (Bronze), höchstens 5 % Silber, keiner Gold.
-- **Nicht bestanden:** Runde wiederholen, Gold bleibt. Ein Knappe bringt etwa 1 Gold, jeder weitere Versuch derselben Runde 30 % weniger pro Kill, mindestens aber 1 Gold pro 4 Kills (Runde 5 über 5 Versuche: etwa 85, 60, 42, 29, 21 Gold).
-- **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne (Gold und Bauten bleiben) oder weiter zur nächsten Runde.
-- **Budget:** Welt 1: 0, 60, 80, 100, 120 Gold. Danach jede Runde 100 + 12 pro Runde. Restgold verfällt, Bauten bleiben innerhalb einer Welt stehen.
-- **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt mit leerem Feld; ihr Startbudget ist 60 % dessen, was die vorige Welt insgesamt hatte.
+- **Nicht bestanden:** Runde wiederholen, Gold und Bauten bleiben. Jeder weitere Versuch derselben Runde bringt 30 % weniger Gold pro Kill, mindestens aber 1 Gold pro 4 Kills.
+- **Bestanden, aber nicht perfekt:** Du wählst selbst: nochmal spielen für mehr Sterne oder weiter zur nächsten Runde.
+- **Gold:** Es gibt kein festes Rundenbudget. Gold gibt es nur für getötete Helden: 1 pro Held, 2 für Ritter, Klerikerin und Magier, 10 für den Paladin. Es bleibt von Runde zu Runde erhalten. Einmalig gibt es zu Runde 2 eine Kriegskasse von 120 Gold für die ersten Stacheln.
+- **Boss:** Jede 5. Runde Paladine. Eine Bossrunde ist nur bestanden, wenn jeder Paladin fällt. Der Paladin springt nicht über Mauern, sondern schlägt mit einem Hieb alles bis drei Felder hoch vor sich weg. Danach neue Welt: Das Feld wird geräumt, den vollen Wert der Bauten bekommt man als Gold zurück.
 - **Strecke:** Am Anfang 30 Felder, pro geschaffter Runde 2 mehr.
 
 ## Karte
@@ -69,8 +69,8 @@ Da auch die Helden von Runde zu Runde deutlich mehr Leben bekommen, kommt man ab
 
 ## Helden
 
-Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Sprungweite und Klugheit und vor allem die Anzahl der Helden (Welt 1: 1, 6, 12, 30, 48; danach hängt sie am Gold, das in der Welt bisher zur Verfügung stand, damit jede Runde ähnlich knapp bleibt; höchstens 400), damit Gruben mit ihrer festen Kapazität volllaufen. Große Wellen kommen dichter hintereinander. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit Zinseszins um 10 % pro Runde (Runde 5: ×1,46, Runde 10: ×2,36, Runde 15: ×3,8), also genau wie die Burg pro Stufe. Ab Welt 3 (Runde 11) werden die Helden außerdem 2 % pro Runde schneller. Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten.
+Welt 1 nur Knappen. Nach jedem Boss kommt ein neuer Heldentyp dazu: Schurke ab Runde 6 (springt weit und hoch), Ritter ab Runde 11 (gepanzert, springt kaum), Klerikerin ab Runde 16 (heilt), Magier ab Runde 21 (schwebt über Lücken und Bodenfallen). Jede 5. Runde kommen Paladine (Boss, klettert aus Löchern). Dazwischen steigen Sprungweite und Klugheit und vor allem die Anzahl der Helden (Welt 1: 1, 6, 8, 10, 13; danach 20 % mehr pro Runde, höchstens 400; so schnell, wie sich gut gebaute Fallen durch Kill-Gold selbst bezahlen), damit Gruben mit ihrer festen Kapazität volllaufen. Große Wellen kommen dichter hintereinander. Mit jeder Runde werden sie klüger und springen weiter. Leben, Schlagkraft gegen Blöcke und Kreaturen und die Heilung wachsen mit Zinseszins um 10 % pro Runde (Runde 5: ×1,46, Runde 10: ×2,36, Runde 15: ×3,8), also genau wie die Burg pro Stufe. Ab Welt 3 (Runde 11) werden die Helden außerdem 2 % pro Runde schneller. Der Startknopf zeigt die aktuelle Stärke, zähere Helden haben breitere Lebensleisten.
 
 ## Dunkler Lord
 
-Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen dorthin, eine Markierung zeigt den Einschlag. Jeder besiegte Boss bringt einen Lordpunkt. Ausgeben kostet zusätzlich Gold in Höhe eines Rundenbudgets, bei jeder weiteren Stufe derselben Fähigkeit 50 % mehr (Wurfkraft, Nachladen oder Radius). Setzt man die Burg zurück oder startet neu, fängt der Lord wieder bei Stufe 1 an.
+Während einer Runde auf die Strecke tippen: der Lord wirft einen Stein im Bogen dorthin, eine Markierung zeigt den Einschlag. Jeder besiegte Boss bringt einen Lordpunkt. Ausgeben kostet zusätzlich 60 Gold, bei jeder weiteren Stufe derselben Fähigkeit 40 mehr (Wurfkraft, Nachladen oder Radius). Setzt man die Burg zurück oder startet neu, fängt der Lord wieder bei Stufe 1 an.
