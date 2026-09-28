@@ -40,7 +40,7 @@ Kreaturen haben Lebenspunkte. Helden, die nicht drüberspringen können (zum Bei
 
 Die Bauleiste lässt sich nach Art (Gelände, Fallen, Kreaturen) oder nach Kosten sortieren.
 
-Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar nicht, ab Burgstufe 2 bis Stufe 2, ab Burgstufe 5 bis Stufe 3. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %.
+Alles hat 3 Stufen. Aufwerten hängt an der Burg: Mit Burgstufe 1 geht es gar nicht, ab Burgstufe 2 bis Stufe 2, ab Burgstufe 5 bis Stufe 3. Abreißen gibt 70 % zurück, in derselben Bauphase 100 %. Hat man dieselbe Runde zweimal in Folge verloren, gibt Abreißen bis zum Bestehen immer den vollen Preis zurück, damit man ohne Verlust umbauen kann.
 
 ## Regeln
 

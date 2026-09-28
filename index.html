@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen, Einführung). Nur die Sortierung bleibt erhalten.
-const DATA_VERSION = '2026-09-28.10', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-28.11', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1', 'fallenfuerst_intro_v1'].forEach(k => localStorage.removeItem(k));
@@ -1723,7 +1723,9 @@ function statText(type, lvl) {
   }
 }
 const upCost = t => Math.round(TOOLS[t.type].cost * (t.lvl === 1 ? .8 : 1.5));
-const sellVal = t => t.fresh ? t.spent : Math.floor(t.spent * .7);
+// Abreißen: 70 % zurück, in derselben Bauphase oder nach zwei Niederlagen in Folge der volle Preis (Umbauen, wenn man festhängt)
+const freeRebuild = () => (S.fails || 0) >= 2;
+const sellVal = t => t.fresh || freeRebuild() ? t.spent : Math.floor(t.spent * .7);
 const infoBtn = id => `<button class="btn alt ibtn" id="${id}" aria-label="Info">i</button>`;
 function showInfo(title, html, back) {
   showCard(`<h2>${title}</h2>${html}<div class="row"><button class="btn pri" id="mInfoBack">Zurück</button></div>`);
@@ -2009,7 +2011,7 @@ function showResult(w, stars) {
     <div class="tags">${newWorld ? `<span class="tag l">Neue Welt: ${themeFor(w + 1).name}</span>` : ''}${newTypes ? `<span class="tag">Neu: ${HT[newTypes].name}</span>` : ''}${!choice && next.paladin ? '<span class="tag b">Bossrunde</span>' : ''}${lordFree() ? `<span class="tag l">Lord: ${lordFree()} Lordpunkt${lordFree() === 1 ? '' : 'e'} frei</span>` : ''}</div>
     <div class="row">${choice
       ? `<button class="btn" id="mRetry">Nochmal<small>freiwillig: Kills 30 % weniger Gold</small></button><button class="btn pri" id="mNext">Weiter<small>Runde ${nextW} · Gold bleibt</small></button>`
-      : `${!passed && canReset() && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: je 3 Sterne werden zu einem Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && canReset() ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
+      : `${!passed && freeRebuild() ? '<p class="hint">Umbauen ist jetzt kostenlos: Abreißen gibt den vollen Preis zurück, bis du die Runde schaffst.</p>' : ''}${!passed && canReset() && !seen.resetHint ? '<p class="hint">Kommst du nicht weiter, setz die Burg zurück: je 3 Sterne werden zu einem Burgpunkt, damit schaltest du neue Fallen frei.</p>' : ''}<button class="btn pri" id="mOk">${passed ? 'Zur Karte' : 'Nochmal bauen'}</button>${!passed && canReset() ? `<button class="btn" id="mReset">Burg zurücksetzen<small>+${runPoints()} Burgpunkte</small></button>` : ''}`}</div>`);
   if (choice) {
     $('mRetry').onclick = () => { S.retry = (S.retry || 0) + 1; S.vol = (S.vol || 0) + 1; save(); hideCard(); updateUI(); };
     $('mNext').onclick = () => {
