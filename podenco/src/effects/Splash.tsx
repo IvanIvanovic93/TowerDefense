@@ -10,7 +10,13 @@ const drop = (x: number, y: number, r: number, rot: number) =>
  * Wasserspritzer als flache Formen: Krone aus Zacken + fliegende Tropfen + Ringe.
  * t = Frames seit dem Aufprall.
  */
-export const Splash: React.FC<{ t: number; x: number; y: number; size?: number; seed?: string }> = ({ t, x, y, size = 1, seed = "s" }) => {
+export const Splash: React.FC<{
+  t: number;
+  x: number;
+  y: number;
+  size?: number;
+  seed?: string;
+}> = ({ t, x, y, size = 1, seed = "s" }) => {
   if (t < 0 || t > 40) return null;
   const grow = Math.min(1, t / 6);
   const fall = Math.max(0, (t - 8) / 14);
@@ -19,9 +25,15 @@ export const Splash: React.FC<{ t: number; x: number; y: number; size?: number; 
   const crown: string[] = [];
   for (let i = 0; i <= n; i++) {
     const px = x - 130 * size + (i / n) * 260 * size;
-    const h = crownH * (0.55 + random(`${seed}h${i}`) * 0.6) * (1 - Math.abs(i / n - 0.5));
+    const h =
+      crownH *
+      (0.55 + random(`${seed}h${i}`) * 0.6) *
+      (1 - Math.abs(i / n - 0.5));
     crown.push(`${px.toFixed(1)} ${(y - h * 2).toFixed(1)}`);
-    if (i < n) crown.push(`${(px + (130 * size) / n).toFixed(1)} ${(y - h * 0.8).toFixed(1)}`);
+    if (i < n)
+      crown.push(
+        `${(px + (130 * size) / n).toFixed(1)} ${(y - h * 0.8).toFixed(1)}`,
+      );
   }
   const crownD = `M ${x - 150 * size} ${y + 10} L ${crown.join(" L ")} L ${x + 150 * size} ${y + 10} Z`;
   const drops = Array.from({ length: 12 }, (_, i) => {
@@ -34,24 +46,42 @@ export const Splash: React.FC<{ t: number; x: number; y: number; size?: number; 
   const ring = Math.min(1, t / 30);
   return (
     <g>
-      <ellipse cx={x} cy={y + 8} rx={(160 + ring * 220) * size} ry={(20 + ring * 26) * size} fill="none" stroke={C.papier} strokeWidth={6} opacity={1 - ring} filter="url(#boil)" />
+      <ellipse
+        cx={x}
+        cy={y + 8}
+        rx={(160 + ring * 220) * size}
+        ry={(20 + ring * 26) * size}
+        fill="none"
+        stroke={C.papier}
+        strokeWidth={6}
+        opacity={1 - ring}
+        filter="url(#boil)"
+      />
       {crownH > 4 ? <Ink d={crownD} fill={C.papier} off={[6, 4]} /> : null}
       {drops.map((d, i) =>
-        d.py < y + 20 ? <Ink key={i} d={drop(d.px, d.py, d.r, 0)} fill={i % 3 === 0 ? C.papier : "#A9C3D2"} off={[3, 2]} w={3} /> : null
+        d.py < y + 20 ? (
+          <Ink
+            key={i}
+            d={drop(d.px, d.py, d.r, 0)}
+            fill={i % 3 === 0 ? C.papier : "#A9C3D2"}
+            off={[3, 2]}
+            w={3}
+          />
+        ) : null,
       )}
     </g>
   );
 };
 
 /** Tropfen beim Schütteln: fliegen von (x,y) aus in Richtung dir (-1 = links). */
-export const ShakeDrops: React.FC<{ t: number; x: number; y: number; dir?: number; seed?: string; count?: number }> = ({
-  t,
-  x,
-  y,
-  dir = -1,
-  seed = "d",
-  count = 26,
-}) => {
+export const ShakeDrops: React.FC<{
+  t: number;
+  x: number;
+  y: number;
+  dir?: number;
+  seed?: string;
+  count?: number;
+}> = ({ t, x, y, dir = -1, seed = "d", count = 26 }) => {
   if (t < 0) return null;
   return (
     <g>
@@ -67,7 +97,15 @@ export const ShakeDrops: React.FC<{ t: number; x: number; y: number; dir?: numbe
         const px = sx + Math.cos(a) * v * lt * toLeft;
         const py = sy + Math.sin(a) * v * lt * 0.6 + 0.7 * lt * lt;
         const r = 5 + random(`${seed}r${i}`) * 6;
-        return <Ink key={i} d={drop(px, py, r, 0)} fill="#A9C3D2" off={[2, 2]} w={3} />;
+        return (
+          <Ink
+            key={i}
+            d={drop(px, py, r, 0)}
+            fill="#A9C3D2"
+            off={[2, 2]}
+            w={3}
+          />
+        );
       })}
     </g>
   );

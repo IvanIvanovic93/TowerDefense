@@ -2,7 +2,19 @@ import React from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Hat } from "../characters/Hat";
 import { Podenco, PodencoPose } from "../characters/Podenco";
-import { blend, CROUCH, EAR_FLOP, EAR_HANG, EAR_UP, EAR_UP_FAR, earFlopAnim, earPop, LIE, LIE_ALERT, run } from "../characters/podencoPoses";
+import {
+  blend,
+  CROUCH,
+  EAR_FLOP,
+  EAR_HANG,
+  EAR_UP,
+  EAR_UP_FAR,
+  earFlopAnim,
+  earPop,
+  LIE,
+  LIE_ALERT,
+  run,
+} from "../characters/podencoPoses";
 import { Postbote, POSTBOTE_STAND } from "../characters/Postbote";
 import { WindLines } from "../effects/WindLines";
 import { ease, easeOut, lerpC } from "../lib/math";
@@ -50,7 +62,12 @@ export const Scene2Hut: React.FC = () => {
   let dy = ALLEY_LANDING.y + 2;
   if (t < POP) {
     const breath = (Math.sin(t / 9) + 1) / 2;
-    pose = { ...LIE, breath, earNear: EAR_HANG, earFar: { ...EAR_HANG, rot: -128 } };
+    pose = {
+      ...LIE,
+      breath,
+      earNear: EAR_HANG,
+      earFar: { ...EAR_HANG, rot: -128 },
+    };
   } else if (t < UP) {
     const k = lerpC(t, [POP, POP + 4], [0, 1], easeOut);
     const look = lerpC(t, [POP + 4, POP + 20], [0, 1], ease);
@@ -59,17 +76,29 @@ export const Scene2Hut: React.FC = () => {
     pose.neck = pose.neck - 10 * look;
     pose.tilt = t > 76 ? lerpC(t, [76, 86], [0, -14], ease) : 0;
     pose.earNear = earPop(EAR_UP, t - POP, EAR_HANG);
-    pose.earFar = t < FLOP ? earPop(EAR_UP_FAR, t - POP, { ...EAR_HANG, rot: -128 }) : earFlopAnim(EAR_UP_FAR, EAR_FLOP, t - FLOP);
+    pose.earFar =
+      t < FLOP
+        ? earPop(EAR_UP_FAR, t - POP, { ...EAR_HANG, rot: -128 })
+        : earFlopAnim(EAR_UP_FAR, EAR_FLOP, t - FLOP);
     pose.eye = t === POP ? 1.3 : 1;
   } else if (t < GO) {
     const k = lerpC(t, [UP, GO], [0, 1], ease);
-    pose = blend({ ...LIE_ALERT, head: -38, earFar: EAR_FLOP }, { ...CROUCH, earFar: EAR_FLOP, earNear: EAR_UP }, k);
+    pose = blend(
+      { ...LIE_ALERT, head: -38, earFar: EAR_FLOP },
+      { ...CROUCH, earFar: EAR_FLOP, earNear: EAR_UP },
+      k,
+    );
     pose.tilt = -14 * (1 - k);
   } else {
     const rt = t - GO;
     pose = run(Math.floor(rt / 2));
     dx = ALLEY_LANDING.x + rt * 14 + rt * rt * 0.35;
-    dy = lerpC(rt, [0, 6, 12], [ALLEY_LANDING.y, ALLEY_LANDING.y - 50, ALLEY_STREET_Y - 30], ease);
+    dy = lerpC(
+      rt,
+      [0, 6, 12],
+      [ALLEY_LANDING.y, ALLEY_LANDING.y - 50, ALLEY_STREET_Y - 30],
+      ease,
+    );
   }
 
   return (
@@ -78,12 +107,19 @@ export const Scene2Hut: React.FC = () => {
         <g transform={`translate(${CAM} 0)`}>
           <AlleyBack />
           <Podenco pose={pose} x={dx} y={dy} scale={1.08} />
-          <Postbote pose={pbPose} x={pbX} y={ALLEY_STREET_Y} scale={pbScale} flip />
-          {t >= HAT_OFF ? <Hat x={hatX} y={hatY} rot={hatRot} scale={pbScale} flip /> : null}
+          <Postbote
+            pose={pbPose}
+            x={pbX}
+            y={ALLEY_STREET_Y}
+            scale={pbScale}
+            flip
+          />
+          {t >= HAT_OFF ? (
+            <Hat x={hatX} y={hatY} rot={hatRot} scale={pbScale} flip />
+          ) : null}
         </g>
         <WindLines t={t - GUST} y={520} dur={34} />
       </svg>
     </AbsoluteFill>
   );
 };
-

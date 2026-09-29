@@ -8,7 +8,16 @@ import { skewRect } from "../../lib/rough";
 type Pt = [number, number];
 
 /** Schiefes Fenster mit Läden. */
-export const Window: React.FC<{ x: number; y: number; w: number; h: number; seed: string; shutter?: string; pane?: string; skew?: number }> = ({
+export const Window: React.FC<{
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  seed: string;
+  shutter?: string;
+  pane?: string;
+  skew?: number;
+}> = ({
   x,
   y,
   w,
@@ -21,29 +30,67 @@ export const Window: React.FC<{ x: number; y: number; w: number; h: number; seed
   const lean = (random(seed + "l") - 0.5) * 6;
   return (
     <g>
-      <XeroShape pts={skewRect(x - w * 0.42, y, w * 0.4, h, skew, lean)} fill={shutter} seed={seed + "a"} off={[4, 3]} w={3} />
-      <XeroShape pts={skewRect(x + w + w * 0.02, y, w * 0.4, h, skew, lean)} fill={shutter} seed={seed + "b"} off={[4, 3]} w={3} />
-      <XeroShape pts={skewRect(x, y, w, h, skew, lean)} fill={pane} seed={seed + "p"} off={[5, 4]} />
-      <BgLine pts={[[x + w / 2 + skew * 0.5, y + 4], [x + w / 2, y + h - 4]]} seed={seed + "k"} closed={false} w={2.5} />
-      <BgLine pts={[[x + 4 + skew * 0.5, y + h * 0.45], [x + w - 4 + skew * 0.5, y + h * 0.45 - lean]]} seed={seed + "q"} closed={false} w={2.5} />
+      <XeroShape
+        pts={skewRect(x - w * 0.42, y, w * 0.4, h, skew, lean)}
+        fill={shutter}
+        seed={seed + "a"}
+        off={[4, 3]}
+        w={3}
+      />
+      <XeroShape
+        pts={skewRect(x + w + w * 0.02, y, w * 0.4, h, skew, lean)}
+        fill={shutter}
+        seed={seed + "b"}
+        off={[4, 3]}
+        w={3}
+      />
+      <XeroShape
+        pts={skewRect(x, y, w, h, skew, lean)}
+        fill={pane}
+        seed={seed + "p"}
+        off={[5, 4]}
+      />
+      <BgLine
+        pts={[
+          [x + w / 2 + skew * 0.5, y + 4],
+          [x + w / 2, y + h - 4],
+        ]}
+        seed={seed + "k"}
+        closed={false}
+        w={2.5}
+      />
+      <BgLine
+        pts={[
+          [x + 4 + skew * 0.5, y + h * 0.45],
+          [x + w - 4 + skew * 0.5, y + h * 0.45 - lean],
+        ]}
+        seed={seed + "q"}
+        closed={false}
+        w={2.5}
+      />
     </g>
   );
 };
 
 /** Hauswand, leicht verzogen, mit Dachkante. */
-export const Facade: React.FC<{ x: number; y: number; w: number; h: number; fill: string; seed: string; skew?: number; lean?: number; roof?: string }> = ({
-  x,
-  y,
-  w,
-  h,
-  fill,
-  seed,
-  skew = 0,
-  lean = 0,
-  roof,
-}) => (
+export const Facade: React.FC<{
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fill: string;
+  seed: string;
+  skew?: number;
+  lean?: number;
+  roof?: string;
+}> = ({ x, y, w, h, fill, seed, skew = 0, lean = 0, roof }) => (
   <g>
-    <XeroShape pts={skewRect(x, y, w, h, skew, lean)} fill={fill} seed={seed} off={[8, 6]} />
+    <XeroShape
+      pts={skewRect(x, y, w, h, skew, lean)}
+      fill={fill}
+      seed={seed}
+      off={[8, 6]}
+    />
     {roof ? (
       <XeroShape
         pts={[
@@ -61,15 +108,15 @@ export const Facade: React.FC<{ x: number; y: number; w: number; h: number; fill
 );
 
 /** Kopfsteinpflaster: eine einzige Linie mit vielen Bögen (ein Filter, günstig). */
-export const Cobbles: React.FC<{ x: number; y: number; w: number; h: number; seed: string; rows?: number; opacity?: number }> = ({
-  x,
-  y,
-  w,
-  h,
-  seed,
-  rows = 5,
-  opacity = 0.55,
-}) => {
+export const Cobbles: React.FC<{
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  seed: string;
+  rows?: number;
+  opacity?: number;
+}> = ({ x, y, w, h, seed, rows = 5, opacity = 0.55 }) => {
   let d = "";
   for (let r = 0; r < rows; r++) {
     const ry = y + (r + 0.5) * (h / rows);
@@ -90,6 +137,11 @@ export const Cobbles: React.FC<{ x: number; y: number; w: number; h: number; see
 };
 
 /** Flacher Schattenkeil (Morgenlicht), eine Farbe, halbtransparent. */
-export const FlatShadow: React.FC<{ pts: Pt[]; seed: string; opacity?: number; fill?: string }> = ({ pts, seed, opacity = 0.28, fill = C.gruenDunkel }) => (
+export const FlatShadow: React.FC<{
+  pts: Pt[];
+  seed: string;
+  opacity?: number;
+  fill?: string;
+}> = ({ pts, seed, opacity = 0.28, fill = C.gruenDunkel }) => (
   <Wash pts={pts} fill={fill} seed={seed} opacity={opacity} jitter={10} />
 );

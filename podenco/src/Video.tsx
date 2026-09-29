@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Sequence } from "remotion";
-import { BoilDefs } from "./effects/BoilDefs";
+import { PaperDefs } from "./effects/PaperDefs";
 import { PaperGrain } from "./effects/PaperGrain";
 import { C } from "./lib/palette";
 import { Scene1Gasse } from "./scenes/Scene1Gasse";
@@ -8,12 +8,11 @@ import { Scene2Hut } from "./scenes/Scene2Hut";
 import { Scene3Markt } from "./scenes/Scene3Markt";
 import { Scene4Hafen } from "./scenes/Scene4Hafen";
 import { Scene5Schwimmen } from "./scenes/Scene5Schwimmen";
-import { FREEZE, Scene6Finale } from "./scenes/Scene6Finale";
+import { Scene6Finale } from "./scenes/Scene6Finale";
 
 export const PodencoAbenteuer: React.FC = () => (
   <AbsoluteFill style={{ background: C.papier }}>
-    {/* im Standbild am Ende hören auch die Linien auf zu zittern */}
-    <BoilDefs freezeAt={780 + FREEZE} />
+    <PaperDefs />
     <Sequence from={0} durationInFrames={120} name="1 Gasse">
       <Scene1Gasse />
     </Sequence>

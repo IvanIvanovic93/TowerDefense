@@ -37,25 +37,113 @@ export const Scene5Schwimmen: React.FC = () => {
       <svg width={1920} height={1080}>
         {/* Hintergrund: gegenüberliegende Kaimauer, dunkel */}
         <rect x={0} y={0} width={1920} height={1080} fill={C.ocker} />
-        <XeroShape pts={[[-40, 120], [1960, 110], [1960, 700], [-40, 700]]} fill={C.graublauDunkel} seed="kai5" />
+        <XeroShape
+          pts={[
+            [-40, 120],
+            [1960, 110],
+            [1960, 700],
+            [-40, 700],
+          ]}
+          fill={C.graublauDunkel}
+          seed="kai5"
+        />
         {Array.from({ length: 9 }, (_, i) => (
-          <BgLine key={i} pts={[[i * 230 + 40, 120], [i * 230 + 44, 640]]} seed={`f5${i}`} closed={false} w={2.6} />
+          <BgLine
+            key={i}
+            pts={[
+              [i * 230 + 40, 120],
+              [i * 230 + 44, 640],
+            ]}
+            seed={`f5${i}`}
+            closed={false}
+            w={2.6}
+          />
         ))}
-        <BgLine pts={[[-40, 300], [1960, 294]]} seed="f5q1" closed={false} w={2.6} />
-        <BgLine pts={[[-40, 470], [1960, 466]]} seed="f5q2" closed={false} w={2.6} />
+        <BgLine
+          pts={[
+            [-40, 300],
+            [1960, 294],
+          ]}
+          seed="f5q1"
+          closed={false}
+          w={2.6}
+        />
+        <BgLine
+          pts={[
+            [-40, 470],
+            [1960, 466],
+          ]}
+          seed="f5q2"
+          closed={false}
+          w={2.6}
+        />
         {/* Leiter */}
-        <BgLine pts={[[300, 110], [304, 660]]} seed="lei1" closed={false} w={4} />
-        <BgLine pts={[[380, 110], [384, 660]]} seed="lei2" closed={false} w={4} />
+        <BgLine
+          pts={[
+            [300, 110],
+            [304, 660],
+          ]}
+          seed="lei1"
+          closed={false}
+          w={4}
+        />
+        <BgLine
+          pts={[
+            [380, 110],
+            [384, 660],
+          ]}
+          seed="lei2"
+          closed={false}
+          w={4}
+        />
         {[180, 260, 340, 420, 500, 580].map((y, i) => (
-          <BgLine key={i} pts={[[302, y], [382, y + 2]]} seed={`spr${i}`} closed={false} w={3} />
+          <BgLine
+            key={i}
+            pts={[
+              [302, y],
+              [382, y + 2],
+            ]}
+            seed={`spr${i}`}
+            closed={false}
+            w={3}
+          />
         ))}
         {/* Tang-Streifen an der Wasserlinie */}
-        <XeroShape pts={[[-40, 600], [1960, 596], [1960, 660], [-40, 660]]} fill={C.gruenDunkel} seed="tang" />
+        <XeroShape
+          pts={[
+            [-40, 600],
+            [1960, 596],
+            [1960, 660],
+            [-40, 660],
+          ]}
+          fill={C.gruenDunkel}
+          seed="tang"
+        />
         <Podenco pose={pose} x={x} y={dogY} scale={SCALE} flip holding={held} />
-        <WaterBody x0={-100} x1={2020} y={WATER} bottom={1100} t={t} rows={4} opacity={0.92} fill={C.gruenDunkel} />
+        <WaterBody
+          x0={-100}
+          x1={2020}
+          y={WATER}
+          bottom={1100}
+          t={t}
+          rows={4}
+          opacity={0.92}
+          fill={C.gruenDunkel}
+        />
         {/* Bugwelle hinter dem Kopf */}
-        <InkLine d={`M ${x - 150} ${WATER + 4} q 50 -20 110 -8 M ${x + 60} ${WATER - 4} q 80 -10 170 4 M ${x + 90} ${WATER + 10} q 90 -6 200 12`} w={3.6} />
-        <WaveLine x0={-100} x1={2020} y={WATER + 14} t={t} amp={9} len={130} speed={4} />
+        <InkLine
+          d={`M ${x - 150} ${WATER + 4} q 50 -20 110 -8 M ${x + 60} ${WATER - 4} q 80 -10 170 4 M ${x + 90} ${WATER + 10} q 90 -6 200 12`}
+          w={3.6}
+        />
+        <WaveLine
+          x0={-100}
+          x1={2020}
+          y={WATER + 14}
+          t={t}
+          amp={9}
+          len={130}
+          speed={4}
+        />
       </svg>
     </AbsoluteFill>
   );

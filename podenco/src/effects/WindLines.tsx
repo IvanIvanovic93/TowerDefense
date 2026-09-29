@@ -1,11 +1,17 @@
 import React from "react";
 import { InkLine } from "./Ink";
+import { C } from "../lib/palette";
 
 /**
  * Sichtbare Windböe: geschwungene Linien mit Kringel, die von links durchs Bild ziehen.
  * t = lokaler Frame der Böe (auf twos gerastert übergeben).
  */
-export const WindLines: React.FC<{ t: number; y: number; dur?: number; width?: number }> = ({ t, y, dur = 40, width = 1920 }) => {
+export const WindLines: React.FC<{
+  t: number;
+  y: number;
+  dur?: number;
+  width?: number;
+}> = ({ t, y, dur = 40, width = 1920 }) => {
   if (t < 0 || t > dur + 20) return null;
   const lines = [
     { dy: -60, delay: 0, len: 520, curl: true },
@@ -27,7 +33,7 @@ export const WindLines: React.FC<{ t: number; y: number; dur?: number; width?: n
         const d = l.curl
           ? `M ${tail} ${yy + 10} C ${tail + l.len * 0.3} ${yy - 30 + wob} ${tail + l.len * 0.6} ${yy + 30} ${head - 60} ${yy} C ${head} ${yy - 20} ${head + 10} ${yy - 70} ${head - 40} ${yy - 70} C ${head - 80} ${yy - 70} ${head - 70} ${yy - 30} ${head - 40} ${yy - 32}`
           : `M ${tail} ${yy} C ${tail + l.len * 0.35} ${yy - 24 + wob} ${tail + l.len * 0.7} ${yy + 24} ${head} ${yy - 6}`;
-        return <InkLine key={i} d={d} w={3.5} />;
+        return <InkLine key={i} d={d} w={8} color={C.papier} />;
       })}
     </g>
   );

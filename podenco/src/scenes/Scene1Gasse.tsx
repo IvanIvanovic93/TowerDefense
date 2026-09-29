@@ -26,7 +26,12 @@ export const Scene1Gasse: React.FC = () => {
       <svg width={1920} height={1080}>
         <g transform={`translate(${cam} 0)`}>
           <AlleyBack />
-          <Podenco pose={pose} x={ALLEY_LANDING.x} y={ALLEY_LANDING.y + 2} scale={1.08} />
+          <Podenco
+            pose={pose}
+            x={ALLEY_LANDING.x}
+            y={ALLEY_LANDING.y + 2}
+            scale={1.08}
+          />
           <Zzz t={t} x={ALLEY_LANDING.x + 180} y={ALLEY_LANDING.y - 110} />
         </g>
       </svg>

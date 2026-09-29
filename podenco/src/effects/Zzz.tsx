@@ -2,7 +2,12 @@ import React from "react";
 import { InkLine } from "./Ink";
 
 /** Schlaf-"Z", steigen langsam auf. t auf twos. */
-export const Zzz: React.FC<{ t: number; x: number; y: number; opacity?: number }> = ({ t, x, y, opacity = 1 }) => (
+export const Zzz: React.FC<{
+  t: number;
+  x: number;
+  y: number;
+  opacity?: number;
+}> = ({ t, x, y, opacity = 1 }) => (
   <g opacity={opacity}>
     {[0, 1, 2].map((i) => {
       const lt = (t + i * 26) % 78;

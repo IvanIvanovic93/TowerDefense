@@ -99,7 +99,12 @@ export const run = (i: number, earBounce = 0): PodencoPose => {
     tail: 6 + BOB[k] * 0.4,
     tailCurl: -4,
     earNear: { rot: -28 + (k % 2) * 8 + earBounce, sx: 1, sy: 0.96, fold: 0 },
-    earFar: { rot: -52 - (k % 4) * 5, sx: 0.9, sy: 0.95, fold: -40 - (k % 2) * 30 },
+    earFar: {
+      rot: -52 - (k % 4) * 5,
+      sx: 0.9,
+      sy: 0.95,
+      fold: -40 - (k % 2) * 30,
+    },
     look: 1,
   };
 };
@@ -158,7 +163,8 @@ export const swim = (i: number): PodencoPose => {
 };
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const lerpArr = <T extends number[]>(a: T, b: T, t: number) => a.map((v, i) => lerp(v, b[i], t)) as T;
+const lerpArr = <T extends number[]>(a: T, b: T, t: number) =>
+  a.map((v, i) => lerp(v, b[i], t)) as T;
 const lerpEar = (a: EarPose, b: EarPose, t: number): EarPose => ({
   rot: lerp(a.rot, b.rot, t),
   fold: lerp(a.fold ?? 0, b.fold ?? 0, t),
@@ -166,7 +172,11 @@ const lerpEar = (a: EarPose, b: EarPose, t: number): EarPose => ({
   sy: lerp(a.sy, b.sy, t),
 });
 
-export const blend = (a: PodencoPose, b: PodencoPose, t: number): PodencoPose => ({
+export const blend = (
+  a: PodencoPose,
+  b: PodencoPose,
+  t: number,
+): PodencoPose => ({
   bodyY: lerp(a.bodyY, b.bodyY, t),
   pitch: lerp(a.pitch, b.pitch, t),
   breath: lerp(a.breath, b.breath, t),

@@ -10,7 +10,12 @@ import { C } from "../lib/palette";
 import { lerpC } from "../lib/math";
 import { onTwos } from "../lib/twos";
 import { FishStandBack, FishStandFront } from "./sets/FishStand";
-import { MARKET_GROUND, MarketFar, MarketGround, MarketMid } from "./sets/MarketSet";
+import {
+  MARKET_GROUND,
+  MarketFar,
+  MarketGround,
+  MarketMid,
+} from "./sets/MarketSet";
 
 const SPEED = 14;
 const STAND_X = 2150;
@@ -36,7 +41,13 @@ const PIGEONS = Array.from({ length: 6 }, (_, i) => {
   let tk = 0;
   while (dogWorldX(tk) < x - 320 && tk < 400) tk++;
   tk += Math.floor(random(`pd${i}`) * 4);
-  return { x, tk, vx: 4 + random(`pvx${i}`) * 10, vy: 14 + random(`pvy${i}`) * 8, flip: i % 3 === 0 };
+  return {
+    x,
+    tk,
+    vx: 4 + random(`pvx${i}`) * 10,
+    vy: 14 + random(`pvy${i}`) * 8,
+    flip: i % 3 === 0,
+  };
 });
 
 /** Szene 3 (270-480): Jagd über den Marktplatz, Parallax in 3 Ebenen. */
@@ -49,13 +60,19 @@ export const Scene3Markt: React.FC = () => {
   const inJump = t >= J0 && t <= J1;
   const jp = (t - J0) / (J1 - J0);
   let pose = run(Math.floor(t / 2));
-  if (inJump) pose = blend(run(0), JUMP, Math.sin(Math.PI * Math.min(1, jp * 1.3)) * 0.9 + 0.1);
+  if (inJump)
+    pose = blend(
+      run(0),
+      JUMP,
+      Math.sin(Math.PI * Math.min(1, jp * 1.3)) * 0.9 + 0.1,
+    );
   const dogY = MARKET_GROUND + 6 - (inJump ? Math.sin(Math.PI * jp) * 190 : 0);
   const dogX = dogWorldX(t);
 
   // Hut tanzt knapp vor der Nase
   const hatX = dogX + 330 + Math.sin(t / 9) * 40;
-  const hatY = 560 + Math.sin(t / 6) * 60 - (inJump ? Math.sin(Math.PI * jp) * 120 : 0);
+  const hatY =
+    560 + Math.sin(t / 6) * 60 - (inJump ? Math.sin(Math.PI * jp) * 120 : 0);
   const hatRot = Math.sin(t / 5) * 32;
 
   return (
@@ -72,7 +89,18 @@ export const Scene3Markt: React.FC = () => {
           <FishStandBack x={STAND_X} y={MARKET_GROUND} />
           {PIGEONS.map((p, i) => {
             const dt = t - p.tk;
-            if (dt < 0) return <Taube key={i} x={p.x} y={MARKET_GROUND - 20} scale={0.8} sitting peck={(t / 2 + i) % 6 < 2} flip={p.flip} />;
+            if (dt < 0)
+              return (
+                <Taube
+                  key={i}
+                  x={p.x}
+                  y={MARKET_GROUND - 20}
+                  scale={0.8}
+                  sitting
+                  peck={(t / 2 + i) % 6 < 2}
+                  flip={p.flip}
+                />
+              );
             return (
               <Taube
                 key={i}
@@ -85,7 +113,11 @@ export const Scene3Markt: React.FC = () => {
             );
           })}
           <Podenco pose={pose} x={dogX} y={dogY} scale={DOG_SCALE} />
-          <FishStandFront x={STAND_X} y={MARKET_GROUND} tip={lerpC(t, [HIT, HIT + 8], [0, 28])} />
+          <FishStandFront
+            x={STAND_X}
+            y={MARKET_GROUND}
+            tip={lerpC(t, [HIT, HIT + 8], [0, 28])}
+          />
           {FISH.map((fi, i) => {
             const dt = Math.max(0, t - HIT);
             let x = fi.x0 + fi.vx * dt;
@@ -94,13 +126,19 @@ export const Scene3Markt: React.FC = () => {
             if (dt > 0 && y > MARKET_GROUND - 12) {
               // gelandet: liegen bleiben
               let land = 0;
-              while (fi.y0 + fi.vy * land + 1.1 * land * land < MARKET_GROUND - 12) land += 1;
+              while (
+                fi.y0 + fi.vy * land + 1.1 * land * land <
+                MARKET_GROUND - 12
+              )
+                land += 1;
               x = fi.x0 + fi.vx * land;
               y = MARKET_GROUND - 12 + (i % 3) * 14;
               rot = i % 2 ? 180 : 0;
             }
             if (dt === 0) rot = (i % 2) * 180 + (i - 4) * 3;
-            return <Fisch key={i} x={x} y={y} rot={rot} scale={0.8} tone={fi.tone} />;
+            return (
+              <Fisch key={i} x={x} y={y} rot={rot} scale={0.8} tone={fi.tone} />
+            );
           })}
           <Hat x={hatX} y={hatY} rot={hatRot} scale={1.05} />
         </g>
@@ -108,14 +146,49 @@ export const Scene3Markt: React.FC = () => {
         <g transform={`translate(${-cam * 1.5} 0)`}>
           {[1500, 3400, 5200].map((x, i) => (
             <g key={i}>
-              <XeroShape pts={[[x, 1100], [x + 6, 520], [x + 40, 520], [x + 46, 1100]]} fill={C.gruenDunkel} seed={`pfahl${i}`} />
-              <XeroShape pts={[[x - 30, 520], [x + 76, 520], [x + 60, 460], [x - 14, 460]]} fill={C.senf} seed={`lampe${i}`} />
+              <XeroShape
+                pts={[
+                  [x, 1100],
+                  [x + 6, 520],
+                  [x + 40, 520],
+                  [x + 46, 1100],
+                ]}
+                fill={C.gruenDunkel}
+                seed={`pfahl${i}`}
+              />
+              <XeroShape
+                pts={[
+                  [x - 30, 520],
+                  [x + 76, 520],
+                  [x + 60, 460],
+                  [x - 14, 460],
+                ]}
+                fill={C.senf}
+                seed={`lampe${i}`}
+              />
             </g>
           ))}
           {[900, 2500, 4300].map((x, i) => (
             <g key={i}>
-              <XeroShape pts={[[x, 1100], [x + 10, 980], [x + 220, 976], [x + 230, 1100]]} fill={C.ockerDunkel} seed={`korb${i}`} />
-              <BgLine pts={[[x + 14, 1020], [x + 220, 1016]]} seed={`korbl${i}`} closed={false} w={3} />
+              <XeroShape
+                pts={[
+                  [x, 1100],
+                  [x + 10, 980],
+                  [x + 220, 976],
+                  [x + 230, 1100],
+                ]}
+                fill={C.ockerDunkel}
+                seed={`korb${i}`}
+              />
+              <BgLine
+                pts={[
+                  [x + 14, 1020],
+                  [x + 220, 1016],
+                ]}
+                seed={`korbl${i}`}
+                closed={false}
+                w={3}
+              />
             </g>
           ))}
         </g>

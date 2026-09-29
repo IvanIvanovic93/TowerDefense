@@ -1,4 +1,4 @@
-import { deg, } from "./math";
+import { deg } from "./math";
 import { smoothPath } from "./rough";
 
 type Pt = [number, number];
@@ -37,12 +37,20 @@ export const limbOutline = (pts: Pt[], widths: number[]): string => {
   const e = pts[n - 1];
   const p = pts[n - 2];
   const el = Math.hypot(e[0] - p[0], e[1] - p[1]) || 1;
-  const cap: Pt = [e[0] + ((e[0] - p[0]) / el) * widths[n - 1] * 0.45, e[1] + ((e[1] - p[1]) / el) * widths[n - 1] * 0.45];
+  const cap: Pt = [
+    e[0] + ((e[0] - p[0]) / el) * widths[n - 1] * 0.45,
+    e[1] + ((e[1] - p[1]) / el) * widths[n - 1] * 0.45,
+  ];
   return smoothPath([...L, cap, ...R.reverse()], true);
 };
 
 /** Punkt entlang der Kette (t 0..1 über alle Segmente) mit seitlichem Versatz s (-1..1 der halben Breite). */
-export const alongChain = (pts: Pt[], widths: number[], t: number, s: number): Pt => {
+export const alongChain = (
+  pts: Pt[],
+  widths: number[],
+  t: number,
+  s: number,
+): Pt => {
   const segs = pts.length - 1;
   const ft = Math.min(segs - 0.001, Math.max(0, t * segs));
   const i = Math.floor(ft);
@@ -53,5 +61,8 @@ export const alongChain = (pts: Pt[], widths: number[], t: number, s: number): P
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const len = Math.hypot(dx, dy) || 1;
-  return [a[0] + dx * u - (dy / len) * w * s, a[1] + dy * u + (dx / len) * w * s];
+  return [
+    a[0] + dx * u - (dy / len) * w * s,
+    a[1] + dy * u + (dx / len) * w * s,
+  ];
 };
