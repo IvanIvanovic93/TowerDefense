@@ -252,7 +252,7 @@ const HT = {
 // Jede Burgstufe schaltet etwas frei. Burgpunkte gibt es beim Zurücksetzen der Burg: einen je 3 Sterne.
 // Datenstand: Wird bei jeder veröffentlichten Änderung erhöht. Dann starten alle wieder bei null
 // (Spielstand, Lord, Burg, Neu-Markierungen, Einführung). Nur die Sortierung bleibt erhalten.
-const DATA_VERSION = '2026-09-28.13', VERSION_KEY = 'fallenfuerst_version';
+const DATA_VERSION = '2026-09-29.1', VERSION_KEY = 'fallenfuerst_version';
 try {
   if (localStorage.getItem(VERSION_KEY) !== DATA_VERSION) {
     ['fallenfuerst_v2', 'fallenfuerst_lord_v1', 'fallenfuerst_burg_v1', 'fallenfuerst_seen_v1', 'fallenfuerst_intro_v1'].forEach(k => localStorage.removeItem(k));
