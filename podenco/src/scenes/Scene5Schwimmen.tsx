@@ -127,13 +127,13 @@ export const Scene5Schwimmen: React.FC = () => {
           bottom={1100}
           t={t}
           rows={4}
-          opacity={0.92}
           fill={C.gruenDunkel}
         />
         {/* Bugwelle hinter dem Kopf */}
         <InkLine
           d={`M ${x - 150} ${WATER + 4} q 50 -20 110 -8 M ${x + 60} ${WATER - 4} q 80 -10 170 4 M ${x + 90} ${WATER + 10} q 90 -6 200 12`}
-          w={3.6}
+          w={6}
+          color="#A9C3D2"
         />
         <WaveLine
           x0={-100}
